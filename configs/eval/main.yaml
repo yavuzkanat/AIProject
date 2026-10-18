@@ -1,0 +1,15 @@
+# Main evaluation (phase1 §I.2): held-out in-distribution test set and the paper's S1–S3.
+# Seed ranges: validation 1,000,000+ (training-time checkpoint selection only),
+# test 2,000,000+, OOD 3,000,000+. Training draws seeds below 1,000,000.
+name: main
+output: results/eval/main.csv
+model_file: best_model.zip
+ppo_runs:
+  ppo: results/runs/ppo_default_seed*
+  ppo_entity: results/runs/ppo_entity_seed*
+baselines: [random, greedy_value_rate, greedy_nearest, rh_rk]
+conditions:
+  - {name: test_id, scenarios: {seed_base: 2000000, count: 500}}
+  - {name: paper_S1, scenarios: {paper: S1}, repeats: 30}
+  - {name: paper_S2, scenarios: {paper: S2}, repeats: 30}
+  - {name: paper_S3, scenarios: {paper: S3}, repeats: 30}

@@ -1,0 +1,30 @@
+{
+  "status": "ready",
+  "methods": {
+    "greedy_nearest": {
+      "weighted_score": -0.15217388478110652,
+      "value_fraction": 0.2100304193279867,
+      "makespan": 1234.5076533364795,
+      "completion_rate": 0.9884425193418329
+    },
+    "greedy_value_rate": {
+      "weighted_score": -0.1588682668157161,
+      "value_fraction": 0.2099658988590385,
+      "makespan": 1266.48583797713,
+      "completion_rate": 0.9684458757915482
+    },
+    "random": {
+      "weighted_score": -0.29976353833605957,
+      "value_fraction": 0.09460016985290107,
+      "makespan": 1665.9053916600487,
+      "completion_rate": 0.8746346466365479
+    },
+    "rh_rk": {
+      "weighted_score": -0.14573824809420322,
+      "value_fraction": 0.2052309466286487,
+      "makespan": 1192.0978627609322,
+      "completion_rate": 0.9846116922741637
+    }
+  },
+  "n_scenarios": 100
+}

@@ -1,0 +1,31 @@
+# Generalization and sensitivity grid (phase1 §I.5). 100 unseen scenarios per condition.
+name: generalization
+output: results/eval/generalization.csv
+model_file: best_model.zip
+ppo_runs:
+  ppo: results/runs/ppo_default_seed*
+  ppo_entity: results/runs/ppo_entity_seed*
+baselines: [random, greedy_value_rate, greedy_nearest, rh_rk]
+conditions:
+  # event frequency (x training rates)
+  - {name: rate_x0, event_rate_scale: 0.0, scenarios: {seed_base: 3000000, count: 100}}
+  - {name: rate_x0.5, event_rate_scale: 0.5, scenarios: {seed_base: 3000000, count: 100}}
+  - {name: rate_x1, event_rate_scale: 1.0, scenarios: {seed_base: 3000000, count: 100}}
+  - {name: rate_x2, event_rate_scale: 2.0, scenarios: {seed_base: 3000000, count: 100}}
+  - {name: rate_x4, event_rate_scale: 4.0, scenarios: {seed_base: 3000000, count: 100}}
+  # single event class (each at 3x its training rate)
+  - {name: only_new_target, event_class_only: new_target, event_rate_scale: 3.0, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: only_uav_crash, event_class_only: uav_crash, event_rate_scale: 3.0, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: only_sensor_damage, event_class_only: sensor_damage, event_rate_scale: 3.0, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: only_weather, event_class_only: weather, event_rate_scale: 3.0, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: only_target_move, event_class_only: target_move, event_rate_scale: 3.0, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: only_value_change, event_class_only: value_change, event_rate_scale: 3.0, scenarios: {seed_base: 3100000, count: 100}}
+  # team / task size (training: 3-5 UAVs, 8-18 targets)
+  - {name: size_small, generator: {n_uavs: [2, 2], n_targets: [5, 7]}, scenarios: {seed_base: 3200000, count: 100}}
+  - {name: size_large, generator: {n_uavs: [6, 6], n_targets: [19, 22]}, scenarios: {seed_base: 3200000, count: 100}}
+  # energy constraint
+  - {name: endurance_x0.7, generator: {endurance_scale: 0.7}, scenarios: {seed_base: 3300000, count: 100}}
+  - {name: endurance_x1.3, generator: {endurance_scale: 1.3}, scenarios: {seed_base: 3300000, count: 100}}
+  # target-value distribution
+  - {name: values_bimodal, generator: {value_distribution: bimodal}, scenarios: {seed_base: 3400000, count: 100}}
+  - {name: values_skewed, generator: {value_distribution: skewed}, scenarios: {seed_base: 3400000, count: 100}}

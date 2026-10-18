@@ -1,0 +1,23 @@
+2026-10-18 15:29:26,786 INFO condition test_id done
+2026-10-18 15:29:34,155 INFO condition paper_S1 done
+2026-10-18 15:29:44,864 INFO condition paper_S2 done
+2026-10-18 15:30:00,890 INFO condition paper_S3 done
+wrote 2186 rows to results/eval/main_baselines.csv
+2026-10-18 15:30:33,669 INFO condition rate_x0 done
+2026-10-18 15:31:08,035 INFO condition rate_x0.5 done
+2026-10-18 15:31:45,602 INFO condition rate_x1 done
+2026-10-18 15:32:27,211 INFO condition rate_x2 done
+2026-10-18 15:33:12,156 INFO condition rate_x4 done
+2026-10-18 15:34:00,265 INFO condition only_new_target done
+2026-10-18 15:34:37,080 INFO condition only_uav_crash done
+2026-10-18 15:35:14,317 INFO condition only_sensor_damage done
+2026-10-18 15:35:48,722 INFO condition only_weather done
+2026-10-18 15:36:21,381 INFO condition only_target_move done
+2026-10-18 15:36:52,865 INFO condition only_value_change done
+2026-10-18 15:37:09,605 INFO condition size_small done
+2026-10-18 15:38:14,095 INFO condition size_large done
+2026-10-18 15:38:52,842 INFO condition endurance_x0.7 done
+2026-10-18 15:39:32,321 INFO condition endurance_x1.3 done
+2026-10-18 15:40:11,579 INFO condition values_bimodal done
+2026-10-18 15:40:49,565 INFO condition values_skewed done
+wrote 6800 rows to results/eval/generalization_baselines.csv

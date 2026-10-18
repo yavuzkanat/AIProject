@@ -1,0 +1,34 @@
+# Default MaskablePPO run (phase1 §G.4, decisions J1–J12).
+name: ppo_default
+seed: 0
+total_timesteps: 2000000
+n_envs: 8
+vec_env: subproc
+device: cpu            # MPS measured ~15x slower for this MLP size (docs/phase1_design.md §H)
+torch_threads: 1
+eval_freq: 100000
+n_validation_scenarios: 100
+env:
+  max_uavs: 6
+  max_targets: 24
+  horizon: 2400.0
+  reward: {w_value: 0.5, w_time: 0.5, w_energy: 0.0}
+  scenario:
+    source: generator
+    generator:
+      n_uavs: [3, 5]
+      n_targets: [8, 18]
+      event_window: 800.0
+      event_rates: {new_target: 3.0, uav_crash: 1.5, sensor_damage: 3.0, weather: 3.0,
+                    target_move: 3.0, value_change: 3.0}
+ppo:
+  learning_rate: 0.0003
+  n_steps: 1024
+  batch_size: 256
+  n_epochs: 10
+  gamma: 0.995
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.01
+  net_arch_pi: [256, 256]
+  net_arch_vf: [256, 256]

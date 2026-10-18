@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uavta"
+version = "0.1.0"
+description = "Deep RL for dynamic multi-UAV task allocation, built on the model of Li et al. (Drones 2026, 10(6), 467)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Core: the simulator and Gymnasium environment. No PyTorch needed.
+dependencies = [
+    "numpy>=2.5,<3",
+    "gymnasium==1.4.0",
+    "pydantic>=2.14,<3",
+    "PyYAML>=6.0.3,<7",
+]
+
+[project.optional-dependencies]
+# Versions verified on Apple M3 / macOS / Python 3.12 (docs/phase1_design.md §H).
+rl = [
+    "torch==2.14.1",
+    "stable-baselines3==2.9.0",
+    "sb3-contrib==2.9.0",
+]
+analysis = [
+    "pandas>=3.0,<4",
+    "pyarrow>=26",
+    "matplotlib>=3.11,<4",
+    "scipy>=1.18,<2",
+]
+dev = [
+    "pytest>=9.1,<10",
+    "pytest-cov",
+    "ruff>=0.17",
+    "mypy>=2.4",
+    "types-PyYAML",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"uavta.visualization" = ["dashboard.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "--import-mode=importlib -ra"
+markers = [
+    "slow: long-running tests (training smoke runs)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["uavta"]
+mypy_path = "src"
+warn_unused_ignores = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["pandas.*", "scipy.*", "matplotlib.*", "sb3_contrib.*", "stable_baselines3.*"]
+ignore_missing_imports = true

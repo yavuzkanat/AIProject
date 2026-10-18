@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canlı Eğitim Paneli</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --critical: #d03b3b;
+  --good-text: #006300;
+  --track: #e9e8e3;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --good-text: #0ca30c;
+    --track: #2c2c2a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface-1: #1a1a19;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --good-text: #0ca30c;
+  --track: #2c2c2a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--text-primary);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--surface-1);
+  position: sticky; top: 0; z-index: 5;
+}
+header h1 { font-size: 18px; margin: 0; font-weight: 650; }
+header .sub { color: var(--text-secondary); font-size: 13px; }
+header .spacer { flex: 1; }
+button, select {
+  font: inherit; color: var(--text-primary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+}
+button:hover, select:hover { border-color: var(--axis); }
+button.primary { background: var(--series-1); color: #fff; border-color: transparent; }
+main { max-width: 1320px; margin: 0 auto; padding: 20px 24px 60px; }
+section { margin-top: 28px; }
+section > h2 { font-size: 16px; margin: 0 0 4px; font-weight: 650; }
+section > p.lead { margin: 0 0 14px; color: var(--text-secondary); max-width: 900px; }
+.card {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+}
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.tile .label { color: var(--text-secondary); font-size: 12.5px; }
+.tile .value { font-size: 26px; font-weight: 650; margin-top: 2px; }
+.tile .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.delta-up { color: var(--good-text); }
+.delta-down { color: var(--critical); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--text-secondary); font-weight: 600; font-size: 12.5px; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: color-mix(in srgb, var(--series-1) 7%, transparent); }
+tbody tr.selected { background: color-mix(in srgb, var(--series-1) 13%, transparent); }
+.table-wrap { overflow-x: auto; }
+.bar { width: 140px; height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; display: inline-block; vertical-align: middle; }
+.bar > span { display: block; height: 100%; background: var(--series-1); border-radius: 4px; }
+.status { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.status.running .dot { background: var(--good); animation: pulse 1.4s infinite; }
+.status.done .dot { background: var(--muted); }
+.status.stopped .dot { background: var(--warning); }
+@keyframes pulse { 50% { opacity: .35; } }
+.swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.chart-card h3 { font-size: 14px; margin: 0; font-weight: 620; display: flex; align-items: center; gap: 8px; }
+.chart-card .dir { color: var(--muted); font-weight: 500; font-size: 12px; }
+.chart-card .explain { color: var(--text-secondary); font-size: 12.5px; margin: 4px 0 8px; min-height: 36px; }
+.chart-box { position: relative; height: 240px; }
+#perfCharts .chart-box { height: 320px; }
+.chart-card .tools { margin-left: auto; display: flex; gap: 6px; }
+.chart-card .tools button { padding: 2px 8px; font-size: 12px; }
+.empty { color: var(--muted); padding: 30px 0; text-align: center; }
+details { margin-top: 6px; }
+summary { cursor: pointer; color: var(--text-secondary); font-size: 12.5px; }
+.replay { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; }
+@media (max-width: 900px) { .replay { grid-template-columns: 1fr; } }
+canvas#map { width: 100%; aspect-ratio: 1 / 1; display: block; border-radius: 8px; background: var(--surface-1); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.timeline { margin-top: 10px; }
+.timeline input[type=range] { width: 100%; }
+.ticks { position: relative; height: 16px; }
+.ticks span { position: absolute; top: 0; transform: translateX(-50%); font-size: 11px; color: var(--text-secondary); cursor: default; }
+.uav-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+.uav-row b { min-width: 30px; }
+.uav-row .st { color: var(--text-secondary); }
+.events { max-height: 210px; overflow-y: auto; font-size: 12.5px; margin-top: 8px; }
+.events div { padding: 3px 0; color: var(--muted); }
+.events div.past { color: var(--text-primary); }
+.legend-inline { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+.kbd { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: var(--track); padding: 1px 5px; border-radius: 4px; }
+.warn { color: var(--critical); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Canlı Eğitim Paneli</h1>
+    <div class="sub">PPO ile dinamik çoklu-İHA görev ataması · veriler <span class="kbd">results/runs</span> klasöründen her 5 saniyede okunur</div>
+  </div>
+  <div class="spacer"></div>
+  <span id="updated" class="sub">bağlanıyor…</span>
+  <button id="themeBtn" title="Açık/koyu tema">Tema</button>
+</header>
+<main>
+  <div class="tiles" id="overview"></div>
+
+  <section>
+    <h2>Eğitim koşuları</h2>
+    <p class="lead">Her satır bir eğitim koşusu (bir model × bir rastgele tohum). Ayrıntılarını görmek için satıra tıklayın; en fazla iki koşuyu daha "Karşılaştır" kutusuyla grafiklere ekleyebilirsiniz.</p>
+    <div class="card table-wrap"><table>
+      <thead><tr><th>Karşılaştır</th><th>Koşu</th><th>Ağ</th><th>Durum</th><th>İlerleme</th><th>Hız</th><th>Geçen</th><th>Kalan</th><th>En iyi doğrulama J</th></tr></thead>
+      <tbody id="runRows"><tr><td colspan="9" class="empty">Koşu bekleniyor…</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Görev performansı — <span id="selName">koşu seçilmedi</span></h2>
+    <p class="lead">Model her 100 000 adımda bir, eğitimde hiç görmediği <b>100 sabit doğrulama senaryosunda</b> keşif yapmadan (en olası eylemle) çalıştırılır. Kesikli gri çizgiler aynı 100 senaryodaki klasik yöntemlerdir; PPO çizgisi bunların üstüne çıkıyorsa model sezgisel kurallardan daha iyi atama yapmayı öğreniyor demektir.</p>
+    <div class="tiles" id="selTiles" style="margin-bottom:14px"></div>
+    <div class="grid3" id="perfCharts"></div>
+  </section>
+
+  <section>
+    <h2>Öğrenme dinamikleri — PPO'nun iç göstergeleri</h2>
+    <p class="lead">Bu grafikler modelin nasıl öğrendiğini gösterir; görev başarısını değil. Eğitim sağlıklıysa entropi yavaşça azalır, açıklanan varyans 1'e doğru yükselir, KL küçük kalır.</p>
+    <div class="grid3" id="diagCharts"></div>
+  </section>
+
+  <section>
+    <h2>Politika şu anda ne yapıyor? — senaryo tekrarı</h2>
+    <p class="lead">Seçili koşunun kaydedilmiş modeli makaledeki S1/S2/S3 senaryolarından birinde baştan sona oynatılır (makalenin olay listesi dahil: İHA düşmesi, yeni hedef, hava, sensör arızası…). Eğitim yeni bir en iyi model kaydettiğinde tekrar otomatik yenilenir. Açgözlü yöntemle yan yana karşılaştırmak için kaynağı değiştirin.</p>
+    <div class="replay">
+      <div class="card">
+        <div class="controls">
+          <label>Senaryo <select id="scenarioSel"><option>S1</option><option>S2</option><option selected>S3</option></select></label>
+          <label>Kaynak <select id="sourceSel">
+            <option value="best">Seçili koşu · en iyi model</option>
+            <option value="final">Seçili koşu · son model</option>
+            <option value="greedy">Açgözlü değer/zaman (karşılaştırma)</option>
+          </select></label>
+          <button id="playBtn" class="primary">▶ Oynat</button>
+          <label>Hız <select id="speedSel"><option value="20">×20</option><option value="60" selected>×60</option><option value="150">×150</option></select></label>
+          <span id="replayStatus" class="sub"></span>
+        </div>
+        <canvas id="map" width="760" height="760" aria-label="İHA rotaları haritası"></canvas>
+        <div class="timeline">
+          <input id="tSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="Zaman">
+          <div class="ticks" id="eventTicks"></div>
+        </div>
+        <div class="legend-inline">
+          <span>▲ İHA (renk = İHA kimliği)</span><span>○ bekleyen hedef (büyüklük = değer)</span>
+          <span>◉ İHA'ya atanmış hedef</span><span>● gözlenmiş hedef</span><span>✕ düşen İHA</span><span>ok = hedef taşındı</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tile"><div class="label">Simülasyon zamanı</div><div class="value" id="simTime">0 s</div></div>
+        <div class="tile" style="margin-top:8px"><div class="label">Toplanan beklenen değer</div><div class="value" id="simValue">0</div><div class="note" id="simDone"></div></div>
+        <div id="uavList" style="margin-top:10px"></div>
+        <div style="margin-top:12px"><b style="font-size:13px">Olaylar</b><div class="events" id="eventList"></div></div>
+        <div id="replayMetrics" class="note" style="margin-top:10px;color:var(--text-secondary);font-size:12.5px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Bu paneli nasıl okumalıyım?</h2>
+    <div class="card">
+      <details open><summary>Modelin amacı</summary>
+        <p>Her karar anında, işi biten bir İHA'ya hangi hedefi gözlemeye gideceği söylenir. Ödül: <b>0,5 × toplanan değer oranı − 0,5 × geçen görev süresi / 2400 s</b>. Değer, hedefe geç kalındıkça (zaman bozunumu), uzun uçuşlarda (hayatta kalma olasılığı) ve kötü havada/arızalı sensörde azalır. Yani model hem <i>değerli ve yakın</i> hedefleri önce seçmeyi hem de görevi hızlı bitirmeyi öğrenmelidir.</p>
+      </details>
+      <details><summary>Doğrulama skoru ile "ortalama bölüm ödülü" neden farklı?</summary>
+        <p>Eğitim sırasında politika keşif için rastgele eylemler de dener; "ortalama bölüm ödülü" bu gürültülü davranışın son 100 bölümdeki ortalamasıdır. Doğrulama skoru ise aynı 100 senaryoda, rastgelelik olmadan ölçülür; modeller arası karşılaştırma için güvenilir olan budur. En iyi doğrulama skorunu veren model <span class="kbd">best_model.zip</span> olarak saklanır.</p>
+      </details>
+      <details><summary>Eğitim kötü gidiyorsa neye bakmalıyım?</summary>
+        <p>Entropi çok hızlı sıfıra yaklaşıyorsa model erken "ezberliyor" olabilir. Açıklanan varyans uzun süre 0'ın altındaysa değer ağı öğrenemiyordur. KL sürekli 0,05'in üstündeyse güncellemeler fazla büyüktür. Doğrulama J'si yatay seyrediyor ve temel yöntemlerin altında kalıyorsa daha fazla adım ya da farklı ağ mimarisi gerekir.</p>
+      </details>
+      <details><summary>Ağ türleri</summary>
+        <p><b>mlp</b>: tüm gözlem vektörünü tek bir çok katmanlı ağdan geçirir (planlanan ana yöntem). <b>entity</b>: aynı küçük ağı her hedefe ayrı ayrı uygulayıp hedefleri puanlar; hedef sırasından bağımsızdır ve genelde çok daha hızlı öğrenir (mimari ablasyonu).</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const nf = (v, d = 3) => (v == null || Number.isNaN(v)) ? "–" : Number(v).toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const steps = (v) => v == null ? "–" : v >= 1e6 ? nf(v / 1e6, 2) + " M" : v >= 1e3 ? nf(v / 1e3, 0) + " B" : nf(v, 0);
+const dur = (s) => { if (s == null || !isFinite(s)) return "–"; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h} sa ${m} dk` : m ? `${m} dk ${x} sn` : `${x} sn`; };
+const STATUS_TR = { running: "Çalışıyor", done: "Bitti", stopped: "Durdu / sırada" };
+const BASELINE_STYLE = {
+  greedy_nearest: { label: "Açgözlü (en yakın)", short: "En yakın", dash: [6, 4] },
+  greedy_value_rate: { label: "Açgözlü (değer/zaman)", short: "Değer/zaman", dash: [2, 3] },
+  rh_rk: { label: "RH-RK yeniden planlama", short: "RH-RK", dash: [10, 3, 2, 3] },
+  random: { label: "Rastgele", short: "Rastgele", dash: [1, 4] },
+};
+
+let state = { runs: [] };
+let selected = null;
+const compare = new Set();
+const series = {};
+let baselines = null;
+const charts = {};
+
+// ------------------------------------------------------------------ theme
+(function initTheme() {
+  try { const t = localStorage.getItem("dash-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  $("themeBtn").onclick = () => {
+    const dark = document.documentElement.dataset.theme
+      ? document.documentElement.dataset.theme === "dark"
+      : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("dash-theme", document.documentElement.dataset.theme); } catch (e) {}
+    rebuildCharts(); drawMap();
+  };
+})();
+
+// ------------------------------------------------------------------ chart helpers
+function colorFor(name) {
+  // Colour follows the run: selected = slot 1, compared runs keep their slot while compared.
+  const order = [selected, ...compare].filter(Boolean);
+  const i = order.indexOf(name);
+  return css(`--series-${Math.min(i, 2) + 1}`);
+}
+
+const endLabels = {
+  id: "endLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    const items = [];
+    chart.data.datasets.forEach((ds, i) => {
+      if (!ds.endLabel || !chart.isDatasetVisible(i)) return;
+      const pts = chart.getDatasetMeta(i).data;
+      const p = pts[pts.length - 1];
+      if (p && isFinite(p.y)) items.push({ y: p.y, x: p.x, text: ds.endLabel });
+    });
+    items.sort((a, b) => a.y - b.y);
+    for (let k = 1; k < items.length; k++) if (items[k].y - items[k - 1].y < 13) items[k].y = items[k - 1].y + 13;
+    ctx.save();
+    ctx.font = "11px system-ui, -apple-system, sans-serif";
+    ctx.fillStyle = css("--text-secondary");
+    for (const it of items) ctx.fillText(it.text, Math.min(it.x, chartArea.right) + 6, it.y + 4);
+    ctx.restore();
+  },
+};
+const crosshair = {
+  id: "crosshair",
+  afterDraw(chart) {
+    const a = chart.tooltip?.getActiveElements?.();
+    if (!a || !a.length) return;
+    const x = a[0].element.x, { top, bottom } = chart.chartArea, ctx = chart.ctx;
+    ctx.save(); ctx.strokeStyle = css("--axis"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke(); ctx.restore();
+  },
+};
+
+function makeChart(canvas, yTitle, digits) {
+  return new Chart(canvas, {
+    type: "line",
+    data: { datasets: [] },
+    plugins: [endLabels, crosshair],
+    options: {
+      animation: false, responsive: true, maintainAspectRatio: false, parsing: false, normalized: true,
+      layout: { padding: { right: 92 } },
+      interaction: { mode: "index", intersect: false },
+      elements: { line: { borderWidth: 2, tension: 0.15 }, point: { radius: 0, hoverRadius: 4, hitRadius: 8 } },
+      scales: {
+        x: { type: "linear", grid: { color: css("--grid") }, border: { color: css("--axis") },
+             ticks: { color: css("--muted"), callback: (v) => steps(v), maxTicksLimit: 6 },
+             title: { display: true, text: "eğitim adımı", color: css("--muted") } },
+        y: { grid: { color: css("--grid") }, border: { color: css("--axis") },
+             ticks: { color: css("--muted"), callback: (v) => nf(v, digits), maxTicksLimit: 6 },
+             title: { display: !!yTitle, text: yTitle, color: css("--muted") } },
+      },
+      plugins: {
+        legend: { position: "bottom", labels: { color: css("--text-secondary"), boxWidth: 14, boxHeight: 2, font: { size: 11 } } },
+        tooltip: {
+          filter: (item) => !item.dataset.isBaseline,
+          callbacks: {
+            title: (items) => items.length ? `Adım: ${Math.round(items[0].parsed.x).toLocaleString("tr-TR")}` : "",
+            label: (item) => `${item.dataset.label}: ${nf(item.parsed.y, digits)}`,
+          },
+        },
+      },
+    },
+  });
+}
+
+const PERF = [
+  { key: "weighted_score", title: "Ağırlıklı skor J", dir: "yüksek daha iyi", digits: 3,
+    explain: "0,5 × değer oranı − 0,5 × makespan / 2400 s. Ana başarı ölçüsü; kesikli çizgilerin üstü = temel yöntemlerden iyi." },
+  { key: "value_fraction", title: "Toplanan değer oranı", dir: "yüksek daha iyi", digits: 3,
+    explain: "Gözlenen hedeflerin beklenen değeri / ortaya çıkan tüm hedeflerin değeri. Gecikme, risk ve hava değeri düşürür." },
+  { key: "makespan", title: "Makespan (s)", dir: "düşük daha iyi", digits: 0,
+    explain: "Son gözlemin bittiği an. Yükü İHA'lar arasında iyi paylaştıran politika görevi daha erken bitirir." },
+];
+const DIAG = [
+  { key: "rollout/ep_rew_mean", title: "Ortalama bölüm ödülü", dir: "yüksek daha iyi", digits: 3,
+    explain: "Keşif yapan (rastgelelik içeren) politikanın son 100 eğitim bölümündeki ortalama getirisi." },
+  { key: "train/entropy_loss", title: "Entropi kaybı (−entropi)", dir: "0'a yaklaşır", digits: 2,
+    explain: "Politikanın kararsızlığı. 0'a yaklaşması kararların netleştiğini; ani çöküş erken ezberi gösterir." },
+  { key: "train/explained_variance", title: "Açıklanan varyans", dir: "1'e yakın iyi", digits: 2,
+    explain: "Değer ağının (critic) gelecekteki getiriyi ne kadar iyi tahmin ettiği. 0'ın altı = critic işe yaramıyor." },
+  { key: "train/approx_kl", title: "Yaklaşık KL ıraksaması", dir: "~0,01–0,03 sağlıklı", digits: 4,
+    explain: "Her güncellemede politikanın ne kadar değiştiği. Çok büyükse öğrenme kararsızlaşır." },
+  { key: "train/clip_fraction", title: "Kırpma oranı", dir: "~0,1–0,3 tipik", digits: 3,
+    explain: "PPO'nun 'çok büyük adım' diye sınırladığı örneklerin oranı." },
+  { key: "train/value_loss", title: "Değer kaybı", dir: "düşük daha iyi", digits: 4,
+    explain: "Critic'in tahmin hatası. Ödül ölçeği değiştikçe dalgalanabilir." },
+];
+
+function buildChartCards() {
+  const mk = (host, spec, prefix) => {
+    const card = document.createElement("div");
+    card.className = "card chart-card";
+    card.innerHTML = `<h3>${spec.title} <span class="dir">${spec.dir}</span>
+      <span class="tools"><button data-k="${spec.key}">Tablo</button></span></h3>
+      <div class="explain">${spec.explain}</div>
+      <div class="chart-box"><canvas></canvas></div><div class="tablebox" hidden></div>`;
+    host.appendChild(card);
+    const id = prefix + spec.key;
+    charts[id] = { chart: makeChart(card.querySelector("canvas"), "", spec.digits), spec, card, prefix };
+    card.querySelector("button").onclick = () => {
+      const box = card.querySelector(".tablebox");
+      box.hidden = !box.hidden;
+      card.querySelector(".chart-box").hidden = !box.hidden;
+      card.querySelector("button").textContent = box.hidden ? "Tablo" : "Grafik";
+      renderTable(charts[id]);
+    };
+  };
+  PERF.forEach((s) => mk($("perfCharts"), s, "perf:"));
+  DIAG.forEach((s) => mk($("diagCharts"), s, "diag:"));
+}
+
+function rebuildCharts() {
+  for (const [id, c] of Object.entries(charts)) {
+    const canvas = c.card.querySelector("canvas");
+    c.chart.destroy();
+    c.chart = makeChart(canvas, "", c.spec.digits);
+  }
+  updateCharts();
+}
+
+function runPoints(name, c) {
+  const s = series[name];
+  if (!s) return [];
+  if (c.prefix === "perf:") {
+    const v = s.validation;
+    return v.timesteps.map((x, i) => ({ x, y: v[c.spec.key][i] })).filter((p) => p.x != null && p.y != null);
+  }
+  const p = s.progress;
+  return p["time/total_timesteps"].map((x, i) => ({ x, y: p[c.spec.key][i] })).filter((q) => q.x != null && q.y != null);
+}
+
+function updateCharts() {
+  const names = [selected, ...compare].filter(Boolean);
+  for (const c of Object.values(charts)) {
+    const ds = names.map((n) => ({
+      label: n, data: runPoints(n, c), borderColor: colorFor(n), backgroundColor: colorFor(n),
+      endLabel: names.length <= 4 ? n.replace("_seed", " s") : null,
+    }));
+    if (c.prefix === "perf:" && baselines && baselines.methods) {
+      const xs = ds.flatMap((d) => d.data.map((p) => p.x));
+      const xmax = Math.max(1, ...xs, ...names.map((n) => state.runs.find((r) => r.name === n)?.total_timesteps || 0));
+      for (const [m, st] of Object.entries(BASELINE_STYLE)) {
+        const v = baselines.methods[m]?.[c.spec.key];
+        if (v == null) continue;
+        ds.push({ label: st.label, isBaseline: true, data: [{ x: 0, y: v }, { x: xmax, y: v }],
+                  borderColor: css("--muted"), borderDash: st.dash, borderWidth: 1.5, endLabel: st.short });
+      }
+    }
+    c.chart.data.datasets = ds;
+    c.chart.update("none");
+    if (!c.card.querySelector(".tablebox").hidden) renderTable(c);
+  }
+}
+
+function renderTable(c) {
+  const box = c.card.querySelector(".tablebox");
+  if (!selected) { box.innerHTML = '<div class="empty">Koşu seçilmedi</div>'; return; }
+  const pts = runPoints(selected, c).slice(-15);
+  box.innerHTML = `<table><thead><tr><th>Adım</th><th>${c.spec.title}</th></tr></thead><tbody>${
+    pts.map((p) => `<tr><td>${Math.round(p.x).toLocaleString("tr-TR")}</td><td>${nf(p.y, c.spec.digits)}</td></tr>`).join("")
+  }</tbody></table><div class="note" style="color:var(--muted);font-size:12px">Son 15 kayıt · ${selected}</div>`;
+}
+
+// ------------------------------------------------------------------ data polling
+async function getJSON(url) {
+  const r = await fetch(url, { cache: "no-store" });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+async function pollState() {
+  try {
+    state = await getJSON("/api/state");
+    $("updated").textContent = "son güncelleme " + new Date().toLocaleTimeString("tr-TR");
+    if (!selected && state.runs.length) {
+      const running = state.runs.find((r) => r.status === "running");
+      selected = (running || state.runs[state.runs.length - 1]).name;
+    }
+    renderOverview(); renderRuns(); renderSelTiles();
+    await pollSeries();
+    maybeRefreshReplay();
+  } catch (e) {
+    $("updated").innerHTML = '<span class="warn">sunucuya ulaşılamıyor</span>';
+  }
+}
+
+async function pollSeries() {
+  const names = [selected, ...compare].filter(Boolean);
+  await Promise.all(names.map(async (n) => { try { series[n] = await getJSON("/api/run?name=" + encodeURIComponent(n)); } catch (e) {} }));
+  updateCharts();
+}
+
+async function pollBaselines() {
+  try {
+    baselines = await getJSON("/api/baselines");
+    updateCharts(); renderSelTiles(); renderOverview();
+    if (baselines.status !== "ready" && baselines.status !== "error") setTimeout(pollBaselines, 8000);
+  } catch (e) { setTimeout(pollBaselines, 8000); }
+}
+
+function bestBaseline() {
+  if (!baselines?.methods) return null;
+  let best = null;
+  for (const [m, v] of Object.entries(baselines.methods)) if (m !== "random" && (!best || v.weighted_score > best.v)) best = { m, v: v.weighted_score };
+  return best;
+}
+
+// ------------------------------------------------------------------ rendering
+function tile(label, value, note = "", cls = "") {
+  return `<div class="card tile"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="note">${note}</div></div>`;
+}
+
+function renderOverview() {
+  const runs = state.runs;
+  const running = runs.filter((r) => r.status === "running");
+  const done = runs.reduce((a, r) => a + (r.timesteps || 0), 0);
+  const planned = runs.reduce((a, r) => a + (r.total_timesteps || 0), 0);
+  let best = null;
+  for (const r of runs) if (r.best_validation_score != null && (!best || r.best_validation_score > best.best_validation_score)) best = r;
+  const bb = bestBaseline();
+  const eta = running.length ? Math.max(...running.map((r) => r.eta_s || 0)) : null;
+  let note = bb ? `en iyi temel yöntem: ${BASELINE_STYLE[bb.m].label} ${nf(bb.v)}` : (baselines?.status === "error" ? "temel yöntemler hesaplanamadı" : "temel yöntemler hesaplanıyor…");
+  $("overview").innerHTML =
+    tile("Çalışan koşu", `${running.length} / ${runs.length}`, running.map((r) => r.name).join(", ") || "şu an çalışan yok") +
+    tile("Tamamlanan eğitim adımı", steps(done), `planlanan ${steps(planned)} (başlamış koşular)`) +
+    tile("Çalışan koşunun kalan süresi", dur(eta), "yalnızca şu an çalışanlar; sıradakiler hariç") +
+    tile("En iyi doğrulama J", best ? nf(best.best_validation_score) : "–", (best ? best.name + " · " : "") + note);
+}
+
+function renderRuns() {
+  const rows = state.runs.map((r) => {
+    const pct = r.total_timesteps ? Math.min(100, 100 * r.timesteps / r.total_timesteps) : 0;
+    const sw = (r.name === selected || compare.has(r.name)) ? `<span class="swatch" style="background:${colorFor(r.name)}"></span>` : "";
+    return `<tr data-name="${r.name}" class="${r.name === selected ? "selected" : ""}">
+      <td><input type="checkbox" data-cmp="${r.name}" ${compare.has(r.name) ? "checked" : ""} ${r.name === selected ? "disabled" : ""} aria-label="karşılaştır"></td>
+      <td>${sw}${r.name}</td><td>${r.policy}</td>
+      <td><span class="status ${r.status}"><span class="dot"></span>${STATUS_TR[r.status]}</span></td>
+      <td><span class="bar"><span style="width:${pct}%"></span></span> ${nf(pct, 0)}% <span style="color:var(--muted)">${steps(r.timesteps)}/${steps(r.total_timesteps)}</span></td>
+      <td>${r.fps ? nf(r.fps, 0) + " adım/sn" : "–"}</td><td>${dur(r.elapsed_s)}</td><td>${r.status === "running" ? dur(r.eta_s) : "–"}</td>
+      <td>${nf(r.best_validation_score)}${r.best_validation_step != null ? ` <span style="color:var(--muted)">@ ${steps(r.best_validation_step)}</span>` : ""}</td></tr>`;
+  });
+  $("runRows").innerHTML = rows.length ? rows.join("") :
+    '<tr><td colspan="9" class="empty">Henüz koşu yok. Başlatmak için: <span class="kbd">python scripts/train.py --config configs/train/ppo_entity.yaml --seed 0</span></td></tr>';
+  $("runRows").querySelectorAll("tr[data-name]").forEach((tr) => tr.onclick = (ev) => {
+    if (ev.target.matches("input")) return;
+    selected = tr.dataset.name; compare.delete(selected);
+    renderRuns(); renderSelTiles(); pollSeries(); loadReplay(true);
+  });
+  $("runRows").querySelectorAll("input[data-cmp]").forEach((cb) => cb.onchange = () => {
+    if (cb.checked) { if (compare.size >= 2) { cb.checked = false; return; } compare.add(cb.dataset.cmp); }
+    else compare.delete(cb.dataset.cmp);
+    renderRuns(); pollSeries();
+  });
+}
+
+function renderSelTiles() {
+  const r = state.runs.find((x) => x.name === selected);
+  $("selName").textContent = r ? r.name : "koşu seçilmedi";
+  if (!r) { $("selTiles").innerHTML = ""; return; }
+  const lv = r.last_validation || {};
+  const bb = bestBaseline();
+  let delta = "", cls = "";
+  if (bb && r.best_validation_score != null) {
+    const d = r.best_validation_score - bb.v;
+    delta = `${BASELINE_STYLE[bb.m].label} karşısında ${d >= 0 ? "▲ +" : "▼ "}${nf(d)}`;
+    cls = d >= 0 ? "delta-up" : "delta-down";
+  }
+  $("selTiles").innerHTML =
+    tile("Eğitim adımı", steps(r.timesteps), `hedef ${steps(r.total_timesteps)} · ${STATUS_TR[r.status]}`) +
+    tile("En iyi doğrulama J", nf(r.best_validation_score), `<span class="${cls}">${delta || "temel yöntemler bekleniyor"}</span>`) +
+    tile("Son doğrulama: değer oranı", nf(lv.value_fraction), "yüksek daha iyi") +
+    tile("Son doğrulama: makespan", lv.makespan != null ? nf(lv.makespan, 0) + " s" : "–", "düşük daha iyi");
+}
+
+// ------------------------------------------------------------------ replay
+let replay = null, replayKey = null, simT = 0, playing = false, lastFrame = null;
+const KIND_TR = { idle: "Boşta", transit: "Uçuşta →", observe: "Gözlemde", failed: "Düştü", depleted: "Enerjisi bitti" };
+const EVENT_TR = { uav_crash: "İHA düştü", sensor_damage: "Sensör arızası", weather: "Hava kötüleşti", target_move: "Hedef taşındı",
+                   value_change: "Hedef değeri düştü", new_target: "Yeni hedef", preference_shift: "Tercih değişti" };
+const EVENT_ICON = { uav_crash: "✕", sensor_damage: "⚠", weather: "☁", target_move: "➜", value_change: "↓", new_target: "+", preference_shift: "⚖" };
+
+function maybeRefreshReplay() {
+  const r = state.runs.find((x) => x.name === selected);
+  const key = `${selected}|${$("scenarioSel").value}|${$("sourceSel").value}|${r?.best_validation_step}|${r?.status}`;
+  if (key !== replayKey && !playing) loadReplay(false);
+}
+
+async function loadReplay(force) {
+  const src = $("sourceSel").value, sc = $("scenarioSel").value;
+  const r = state.runs.find((x) => x.name === selected);
+  const key = `${selected}|${sc}|${src}|${r?.best_validation_step}|${r?.status}`;
+  if (!force && key === replayKey) return;
+  replayKey = key;
+  if (src !== "greedy" && !selected) { $("replayStatus").textContent = "önce bir koşu seçin"; return; }
+  $("replayStatus").textContent = "yükleniyor…";
+  try {
+    replay = await getJSON(`/api/replay?name=${encodeURIComponent(selected || "")}&scenario=${sc}&model=${src}`);
+    replay.tmax = Math.max(1, ...replay.activities.map((a) => a.t1 || 0));
+    $("tSlider").max = Math.ceil(replay.tmax);
+    simT = Math.min(simT, replay.tmax);
+    const m = replay.metrics;
+    $("replayStatus").textContent = replay.label;
+    $("replayMetrics").innerHTML = `Bölüm sonucu: J = <b>${nf(m.weighted_score)}</b> · değer oranı ${nf(m.value_fraction)} · makespan ${nf(m.makespan, 0)} s · ${m.n_completed}/${m.n_targets_appeared} hedef · bitiş: ${m.termination_reason}`;
+    renderTicks(); drawMap();
+  } catch (e) {
+    replay = null; $("replayStatus").textContent = "model henüz yok: " + e.message; drawMap();
+  }
+}
+
+function renderTicks() {
+  const host = $("eventTicks");
+  host.innerHTML = "";
+  if (!replay) return;
+  const seen = new Set();
+  for (const ev of replay.events) {
+    if (ev.effect !== "applied") continue;
+    const k = ev.time + ev.type; if (seen.has(k)) continue; seen.add(k);
+    const s = document.createElement("span");
+    s.style.left = (100 * ev.time / replay.tmax) + "%";
+    s.textContent = EVENT_ICON[ev.type] || "•";
+    s.title = `${nf(ev.time, 0)} s: ${EVENT_TR[ev.type]}${ev.uav ? " " + ev.uav : ""}${ev.target ? " " + ev.target : ""}`;
+    host.appendChild(s);
+  }
+}
+
+function uavStateAt(u, t) {
+  const acts = replay.activities.filter((a) => a.uav === u);
+  let cur = acts[0];
+  for (const a of acts) { if (a.t0 <= t) cur = a; else break; }
+  let pos = cur.p0;
+  if (cur.kind === "transit" && cur.p1 && cur.t1 > cur.t0) {
+    const f = Math.min(1, Math.max(0, (t - cur.t0) / (cur.t1 - cur.t0)));
+    pos = cur.p0.map((v, i) => v + f * (cur.p1[i] - v));
+  }
+  return { act: cur, pos, acts };
+}
+
+function targetPosAt(tg, t) {
+  let pos = tg.initial_position;
+  for (const ev of replay.events) if (ev.type === "target_move" && ev.target === tg.id && ev.effect === "applied" && ev.time <= t) pos = ev.position;
+  return pos;
+}
+
+function drawMap() {
+  const cv = $("map"), ctx = cv.getContext("2d");
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 760;
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(W * dpr); }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = css("--surface-1"); ctx.fillRect(0, 0, W, W);
+  if (!replay) { ctx.fillStyle = css("--muted"); ctx.font = "14px system-ui"; ctx.fillText("Tekrar için model bekleniyor…", 20, 30); return; }
+  const pad = 26, L = replay.airspace, S = (W - 2 * pad);
+  const X = (x) => pad + S * x / L[0], Y = (y) => pad + S * (1 - y / L[1]);
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1; ctx.fillStyle = css("--muted"); ctx.font = "10px system-ui";
+  for (let k = 0; k <= 8; k++) {
+    const v = k * 1000;
+    ctx.beginPath(); ctx.moveTo(X(v), Y(0)); ctx.lineTo(X(v), Y(L[1])); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X(0), Y(v)); ctx.lineTo(X(L[0]), Y(v)); ctx.stroke();
+    if (k % 2 === 0) { ctx.fillText(`${k} km`, X(v) - 8, Y(0) + 14); }
+  }
+  const t = simT;
+  const uColor = (i) => css(`--series-${(i % 5) + 1}`);
+  const states = replay.uavs.map((_, i) => uavStateAt(i, t));
+  // trails
+  states.forEach((st, i) => {
+    ctx.strokeStyle = uColor(i); ctx.globalAlpha = 0.55; ctx.lineWidth = 2;
+    for (const a of st.acts) {
+      if (a.kind !== "transit" || a.t0 > t || !a.p1) continue;
+      const end = a.t1 <= t ? a.p1 : st.pos;
+      ctx.beginPath(); ctx.moveTo(X(a.p0[0]), Y(a.p0[1])); ctx.lineTo(X(end[0]), Y(end[1])); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  });
+  // targets
+  const assigned = {};
+  states.forEach((st, i) => { if ((st.act.kind === "transit" || st.act.kind === "observe") && st.act.slot != null) assigned[st.act.slot] = i; });
+  const vmax = Math.max(...replay.targets.map((x) => x.value));
+  for (const tg of replay.targets) {
+    if (tg.appear_time > t) continue;
+    const p = targetPosAt(tg, t), r = 4 + 6 * tg.value / vmax;
+    if (tg.initial_position[0] !== p[0] || tg.initial_position[1] !== p[1]) {
+      ctx.strokeStyle = css("--muted"); ctx.setLineDash([3, 3]); ctx.beginPath();
+      ctx.moveTo(X(tg.initial_position[0]), Y(tg.initial_position[1])); ctx.lineTo(X(p[0]), Y(p[1])); ctx.stroke(); ctx.setLineDash([]);
+    }
+    const doneNow = tg.completed && tg.completion_time != null && tg.completion_time <= t;
+    ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), r, 0, 2 * Math.PI);
+    if (doneNow) { ctx.fillStyle = css("--text-secondary"); ctx.fill(); }
+    else {
+      ctx.fillStyle = css("--surface-1"); ctx.fill();
+      ctx.lineWidth = assigned[tg.slot] != null ? 3 : 1.5;
+      ctx.strokeStyle = assigned[tg.slot] != null ? uColor(assigned[tg.slot]) : css("--text-primary"); ctx.stroke();
+    }
+    ctx.fillStyle = css("--text-secondary"); ctx.font = "10px system-ui"; ctx.fillText(tg.id, X(p[0]) + r + 2, Y(p[1]) - r);
+  }
+  // UAVs
+  states.forEach((st, i) => {
+    const [x, y] = [X(st.pos[0]), Y(st.pos[1])];
+    if (st.act.kind === "transit" && st.act.slot != null) {
+      const tg = replay.targets.find((q) => q.slot === st.act.slot);
+      if (tg) { const p = targetPosAt(tg, t); ctx.strokeStyle = uColor(i); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(X(p[0]), Y(p[1])); ctx.stroke(); ctx.setLineDash([]); }
+    }
+    ctx.fillStyle = uColor(i); ctx.strokeStyle = css("--surface-1"); ctx.lineWidth = 2;
+    if (st.act.kind === "failed" || st.act.kind === "depleted") {
+      ctx.lineWidth = 3; ctx.strokeStyle = uColor(i); ctx.beginPath();
+      ctx.moveTo(x - 7, y - 7); ctx.lineTo(x + 7, y + 7); ctx.moveTo(x + 7, y - 7); ctx.lineTo(x - 7, y + 7); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x + 8, y + 6); ctx.lineTo(x - 8, y + 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = css("--text-primary"); ctx.font = "bold 11px system-ui"; ctx.fillText(replay.uavs[i].id, x + 9, y + 12);
+  });
+  // side panel
+  $("simTime").textContent = `${nf(t, 0)} s`;
+  let val = 0, n = 0;
+  for (const tg of replay.targets) if (tg.completed && tg.completion_time <= t) { val += tg.collected_value; n++; }
+  const appeared = replay.targets.filter((q) => q.appear_time <= t).length;
+  $("simValue").textContent = nf(val, 1);
+  $("simDone").textContent = `${n} / ${appeared} hedef gözlendi`;
+  $("uavList").innerHTML = states.map((st, i) => {
+    const tg = st.act.slot != null ? replay.targets.find((q) => q.slot === st.act.slot)?.id : "";
+    return `<div class="uav-row"><span class="swatch" style="background:${uColor(i)};height:10px;width:10px;border-radius:2px"></span>
+      <b>${replay.uavs[i].id}</b><span class="st">${KIND_TR[st.act.kind]} ${tg || ""}</span>
+      <span style="margin-left:auto;color:var(--muted)">tip ${replay.uavs[i].type}</span></div>`;
+  }).join("");
+  $("eventList").innerHTML = replay.events.map((ev) => {
+    const who = [ev.uav, ev.target].filter(Boolean).join(" ");
+    const eff = ev.effect === "applied" ? "" : " (etkisiz)";
+    return `<div class="${ev.time <= t ? "past" : ""}">${EVENT_ICON[ev.type] || "•"} ${nf(ev.time, 0)} s — ${EVENT_TR[ev.type]} ${who}${eff}</div>`;
+  }).join("") || '<div>Bu senaryoda olay yok</div>';
+  $("tSlider").value = Math.round(t);
+}
+
+function frame(ts) {
+  if (!playing || !replay) return;
+  if (lastFrame != null) simT += (ts - lastFrame) / 1000 * Number($("speedSel").value);
+  lastFrame = ts;
+  if (simT >= replay.tmax) { simT = replay.tmax; playing = false; $("playBtn").textContent = "▶ Oynat"; }
+  drawMap();
+  if (playing) requestAnimationFrame(frame);
+}
+$("playBtn").onclick = () => {
+  if (!replay) return;
+  playing = !playing;
+  if (playing && simT >= replay.tmax) simT = 0;
+  $("playBtn").textContent = playing ? "❚❚ Duraklat" : "▶ Oynat";
+  lastFrame = null; requestAnimationFrame(frame);
+};
+$("tSlider").oninput = () => { simT = Number($("tSlider").value); drawMap(); };
+$("scenarioSel").onchange = () => { simT = 0; loadReplay(true); };
+$("sourceSel").onchange = () => loadReplay(true);
+window.addEventListener("resize", drawMap);
+
+// ------------------------------------------------------------------ boot
+if (typeof Chart === "undefined") {
+  document.querySelector("main").insertAdjacentHTML("afterbegin",
+    '<div class="card warn">Grafik kütüphanesi (Chart.js, cdnjs) yüklenemedi; internet bağlantısını kontrol edin. Tablo ve harita yine çalışır.</div>');
+  window.Chart = function () { return { update() {}, destroy() {}, data: {} }; };
+}
+Chart.defaults.font.family = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+buildChartCards();
+pollState();
+pollBaselines();
+setInterval(pollState, 5000);
+</script>
+</body>
+</html>

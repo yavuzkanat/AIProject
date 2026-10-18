@@ -1,0 +1,66 @@
+# Transcription of the benchmark scenarios of Li et al., Drones 2026, 10(6), 467.
+# Sources: §5.1.1 (airspace, lambdas), Table 3 (UAVs), Table 4 (targets),
+# Table 5 (dynamic events), §5.1.3 (initial preference).
+# The `scenarios` column is copied from the paper's "Involved Scenarios" column.
+# Interpretations of ambiguous entries are documented in docs/assumptions.md.
+
+name: paper
+variants: [S1, S2, S3]
+
+airspace: [8000.0, 8000.0, 200.0]   # m (§5.1.1)
+lambda_obse: 0.001                  # 1/s (§5.1.1)
+lambda_risk: 0.0002                 # 1/m (§5.1.1)
+initial_weather: {VL: 1.0, IR: 1.0, RD: 1.0}   # not stated in the paper (gap G3)
+initial_preference: [0.5, 0.5]      # §5.1.3
+
+uav_types:                          # Table 3
+  A: {speed: 15.0, endurance: 1800.0, sensors: {VL: 1, IR: 1, RD: 0}, vulnerability: 0.9}
+  B: {speed: 15.0, endurance: 2400.0, sensors: {VL: 1, IR: 1, RD: 1}, vulnerability: 1.0}
+
+uavs:                               # Table 3
+  - {id: U1, type: A, position: [1466.0, 73.0, 80.0], scenarios: [S1, S2, S3]}
+  - {id: U2, type: B, position: [1373.0, 545.0, 76.0], scenarios: [S1, S2, S3]}
+  - {id: U3, type: A, position: [992.0, 1091.0, 73.0], scenarios: [S1, S2, S3]}
+  - {id: U4, type: B, position: [557.0, 1390.0, 72.0], scenarios: [S2, S3]}
+  - {id: U5, type: A, position: [70.0, 1400.0, 75.0], scenarios: [S3]}
+
+targets:                            # Table 4; `initial: false` = appears through an event
+  - {id: T1,  value: 67, observation_time: 12, position: [1786.0, 3385.0, 82.0],  scenarios: [S1, S2, S3]}
+  - {id: T2,  value: 52, observation_time: 11, position: [5761.0, 1668.0, 105.0], scenarios: [S1, S2, S3]}
+  - {id: T3,  value: 84, observation_time: 16, position: [910.0, 5741.0, 78.0],   scenarios: [S1, S2, S3]}
+  - {id: T4,  value: 78, observation_time: 14, position: [5359.0, 7562.0, 78.0],  scenarios: [S1, S2, S3]}
+  - {id: T5,  value: 92, observation_time: 17, position: [1948.0, 1934.0, 82.0],  scenarios: [S1, S2, S3]}
+  - {id: T6,  value: 56, observation_time: 11, position: [4517.0, 2712.0, 90.0],  scenarios: [S1, S2, S3]}
+  - {id: T7,  value: 57, observation_time: 11, position: [3873.0, 5182.0, 89.0],  scenarios: [S1, S2, S3]}
+  - {id: T8,  value: 59, observation_time: 10, position: [4886.0, 6545.0, 140.0], scenarios: [S1, S2, S3]}
+  - {id: T9,  value: 91, observation_time: 18, position: [3267.0, 1243.0, 86.0],  scenarios: [S1, S2, S3]}
+  - {id: T10, value: 99, observation_time: 19, position: [7238.0, 2633.0, 82.0],  scenarios: [S1, S2, S3]}
+  - {id: T11, value: 97, observation_time: 19, position: [2549.0, 4163.0, 88.0],  scenarios: [S2, S3]}
+  - {id: T12, value: 71, observation_time: 14, position: [5627.0, 5859.0, 134.0], scenarios: [S2, S3]}
+  - {id: T13, value: 89, observation_time: 17, position: [2874.0, 3164.0, 80.0],  scenarios: [S2, S3]}
+  - {id: T14, value: 90, observation_time: 17, position: [4406.0, 3981.0, 81.0],  scenarios: [S2, S3]}
+  - {id: T15, value: 71, observation_time: 13, position: [2025.0, 5425.0, 88.0],  scenarios: [S3]}
+  - {id: T16, value: 98, observation_time: 19, position: [7516.0, 6138.0, 111.0], scenarios: [S3]}
+  - {id: T17, value: 99, observation_time: 20, position: [1533.0, 1018.0, 77.0],  scenarios: [S3]}
+  - {id: T18, value: 68, observation_time: 14, position: [5192.0, 233.0, 82.0],   scenarios: [S3]}
+  - {id: NT1, value: 76, observation_time: 15, position: [2184.0, 6889.0, 83.0],  scenarios: [S1, S2, S3], initial: false}
+  - {id: NT2, value: 60, observation_time: 11, position: [6792.0, 7246.0, 80.0],  scenarios: [S3], initial: false}
+
+events:                             # Table 5; `paper_no` is the paper's event number
+  - {paper_no: 1,  time: 100, type: uav_crash, uav: U5, scenarios: [S3]}
+  - {paper_no: 2,  time: 100, type: new_target, target: NT1, position: [2184.0, 6889.0, 83.0], scenarios: [S1, S2, S3]}
+  - {paper_no: 3,  time: 170, type: preference_shift, from: [0.5, 0.5], to: [0.75, 0.25], scenarios: [S3]}
+  - {paper_no: 4,  time: 170, type: value_change, target: T12, from: 71, to: 35, scenarios: [S2, S3]}
+  - {paper_no: 5,  time: 250, type: sensor_damage, uav: U2, sensor: VL, scenarios: [S3]}
+  - {paper_no: 6,  time: 250, type: uav_crash, uav: U3, scenarios: [S1, S2, S3]}
+  - {paper_no: 7,  time: 330, type: weather, mode: absolute, omega: {VL: 0.94, IR: 0.58, RD: 0.54}, scenarios: [S3]}
+  - {paper_no: 8,  time: 330, type: sensor_damage, uav: U1, sensor: IR, scenarios: [S2, S3]}
+  - {paper_no: 9,  time: 440, type: target_move, target: T5, from: [1948.0, 1934.0, 82.0], to: [1537.0, 1365.0, 125.0], scenarios: [S3]}
+  # Inconsistency I3: in S3 the preference is already [0.75, 0.25] after event 3.
+  - {paper_no: 10, time: 440, type: preference_shift, from: [0.5, 0.5], to: [0.75, 0.25], scenarios: [S1, S2, S3]}
+  - {paper_no: 11, time: 540, type: value_change, target: T13, from: 89, to: 44, scenarios: [S3]}
+  # Inconsistency I2: events 12 and 13 share the destination (1206, 6405, 129).
+  - {paper_no: 12, time: 540, type: target_move, target: NT1, from: [2184.0, 6889.0, 83.0], to: [1206.0, 6405.0, 129.0], scenarios: [S2]}
+  - {paper_no: 13, time: 540, type: target_move, target: T15, from: [2025.0, 5425.0, 88.0], to: [1206.0, 6405.0, 129.0], scenarios: [S3]}
+  - {paper_no: 14, time: 660, type: new_target, target: NT2, position: [6792.0, 7246.0, 80.0], scenarios: [S3]}
+  - {paper_no: 15, time: 660, type: weather, mode: absolute, omega: {VL: 0.75, IR: 0.76, RD: 0.91}, scenarios: [S1, S2, S3]}

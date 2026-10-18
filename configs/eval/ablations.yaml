@@ -1,0 +1,16 @@
+# Phase 11 ablations, evaluated on the same 500 held-out test scenarios as the main study.
+# J is always computed with the default weights (0.5, 0.5) so rows are comparable.
+name: ablations
+output: results/eval/ablations.csv
+model_file: best_model.zip
+ppo_runs:
+  ppo_entity: results/runs/ppo_entity_seed*
+  abl_value_only: results/runs/abl_value_only_seed*
+  abl_w25: results/runs/abl_w25_seed*
+  abl_w75: results/runs/abl_w75_seed*
+  abl_energy: results/runs/abl_energy_seed*
+  ppo: results/runs/ppo_default_seed*
+  abl_unmasked: results/runs/abl_unmasked_seed*
+baselines: []
+conditions:
+  - {name: test_id, scenarios: {seed_base: 2000000, count: 500}}
