@@ -1,0 +1,18 @@
+# Improvement experiments (after the main study), evaluated with the main protocol:
+# same 500 held-out test scenarios and S1–S3, 5 training seeds each.
+#  * ppo_entity_lookahead: decision-time lookahead, configuration selected on 50 VALIDATION
+#    scenarios only (top_k = 2, event-free rollouts): see docs/report.md §11.
+#  * ppo_attention: entity scorer + 1 attention layer over UAV and target tokens (1M steps).
+name: improvements
+output: results/eval/improvements.csv
+model_file: best_model.zip
+ppo_runs:
+  ppo_attention: results/runs/ppo_attention_seed*
+lookahead_runs:
+  ppo_entity_lookahead: {pattern: results/runs/ppo_entity_seed*, top_k: 2, samples: 0}
+baselines: []
+conditions:
+  - {name: test_id, scenarios: {seed_base: 2000000, count: 500}}
+  - {name: paper_S1, scenarios: {paper: S1}}
+  - {name: paper_S2, scenarios: {paper: S2}}
+  - {name: paper_S3, scenarios: {paper: S3}}

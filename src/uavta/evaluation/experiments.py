@@ -58,12 +58,23 @@ class Condition(BaseModel):
     baselines: list[str] | None = None
 
 
+class LookaheadSpec(BaseModel):
+    """Decision-time lookahead on top of every run matching ``pattern``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    pattern: str
+    top_k: int = Field(2, gt=0)
+    samples: int = Field(0, ge=0)
+
+
 class ExperimentSpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
     output: str
     ppo_runs: dict[str, str] = Field(default_factory=dict)
+    lookahead_runs: dict[str, LookaheadSpec] = Field(default_factory=dict)
     model_file: str = "best_model.zip"
     baselines: list[str] = Field(default_factory=lambda: list(BASELINES))
     env: dict[str, Any] = Field(default_factory=dict)
@@ -112,13 +123,25 @@ def run_experiment(spec: ExperimentSpec) -> pd.DataFrame:
     from uavta.agents.ppo_factory import PPOPolicy
 
     torch.set_num_threads(1)  # fair single-thread decision latency
-    ppo_models = {
+    ppo_models: dict[str, list[tuple[int, AllocationPolicy]]] = {
         name: [
             (seed, PPOPolicy.load(path, name=name))
             for seed, path in discover_runs(pat, spec.model_file)
         ]
         for name, pat in spec.ppo_runs.items()
     }
+    from uavta.agents.lookahead import LookaheadPolicy
+
+    for name, la in spec.lookahead_runs.items():
+        ppo_models[name] = [
+            (
+                seed,
+                LookaheadPolicy(
+                    PPOPolicy.load(path), top_k=la.top_k, samples=la.samples, name=name
+                ),
+            )
+            for seed, path in discover_runs(la.pattern, spec.model_file)
+        ]
     for name, models in ppo_models.items():
         logger.info("%s: %d trained seeds", name, len(models))
     frames = []

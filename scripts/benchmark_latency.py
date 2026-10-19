@@ -32,10 +32,21 @@ def main() -> None:
     env = MultiUAVDynamicEnv()
     refs = seed_refs(TEST_SEED_BASE, args.count, "test_id")
     policies = {name: make() for name, make in BASELINES.items()}
-    for name, run in (("ppo", "ppo_default_seed0"), ("ppo_entity", "ppo_entity_seed0")):
+    for name, run in (
+        ("ppo", "ppo_default_seed0"),
+        ("ppo_entity", "ppo_entity_seed0"),
+        ("ppo_attention", "ppo_attention_seed0"),
+    ):
         path = Path("results/runs") / run / "best_model.zip"
         if path.exists():
             policies[name] = PPOPolicy.load(path, name=name)
+    if "ppo_entity" in policies:
+        from uavta.agents.lookahead import LookaheadPolicy
+
+        base = PPOPolicy.load(
+            Path("results/runs/ppo_entity_seed0/best_model.zip"), name="ppo_entity"
+        )
+        policies["ppo_entity_lookahead"] = LookaheadPolicy(base, top_k=2, samples=0)
     result = {}
     for name, policy in policies.items():
         df = evaluate_policy(env, policy, refs, method=name)

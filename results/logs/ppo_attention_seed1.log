@@ -1,0 +1,3 @@
+2026-10-19 12:16:49,271 INFO device request 'cpu' resolved to 'cpu'
+2026-10-19 12:16:51,519 INFO training ppo_attention_seed1 on cpu
+results/runs/ppo_attention_seed1

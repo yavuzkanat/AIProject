@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drone Yarışı</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f6f5f1; --card: #ffffff; --map: #fcfcfb; --base: #ecebe6; --grid: #e6e5df;
+  --text-primary: #111; --text-secondary: #4f4e4a; --muted: #8a8882; --border: rgba(0,0,0,.09);
+  --ai: #2a78d6; --rule: #eb6834; --done: #0ca30c; --warn: #eda100; --bad: #d03b3b; --target: #222;
+  /* drone identities avoid the two team colours (blue = AI, orange = rule) */
+  --drone-1: #1baf7a; --drone-2: #b98a00; --drone-3: #d55181; --drone-4: #6250d6; --drone-5: #2f8f3a; --drone-6: #5f6b7a;
+  --cloud: 120,130,150; --soft: #f0efea;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0f0f0e; --card: #1a1a19; --map: #1a1a19; --base: #272725; --grid: #2c2c2a;
+    --text-primary: #f2f1ee; --text-secondary: #c6c5bd; --muted: #8f8d87; --border: rgba(255,255,255,.1);
+    --ai: #4a95ef; --rule: #f07a45; --target: #e8e7e3; --soft: #232321; --cloud: 150,160,180;
+    --drone-1: #22b884; --drone-2: #d8a020; --drone-3: #e06a96; --drone-4: #9085e9; --drone-5: #49b356; --drone-6: #9aa6b5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0f0f0e; --card: #1a1a19; --map: #1a1a19; --base: #272725; --grid: #2c2c2a;
+  --text-primary: #f2f1ee; --text-secondary: #c6c5bd; --muted: #8f8d87; --border: rgba(255,255,255,.1);
+  --ai: #4a95ef; --rule: #f07a45; --target: #e8e7e3; --soft: #232321; --cloud: 150,160,180;
+  --drone-1: #22b884; --drone-2: #d8a020; --drone-3: #e06a96; --drone-4: #9085e9; --drone-5: #49b356; --drone-6: #9aa6b5;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--text-primary); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+a { color: var(--ai); }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+header .brand { font-weight: 800; font-size: 19px; }
+header .sp { flex: 1; }
+header a.tech { font-size: 14px; color: var(--muted); text-decoration: none; }
+button { font: inherit; color: var(--text-primary); background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button.go { background: var(--ai); color: #fff; border: 0; font-size: 22px; font-weight: 800; padding: 14px 40px; border-radius: 16px; box-shadow: 0 6px 18px rgba(42,120,214,.3); }
+button.go:hover { filter: brightness(1.07); }
+main { max-width: 1240px; margin: 0 auto; padding: 0 20px 70px; }
+section { margin-top: 38px; }
+h1 { font-size: 34px; line-height: 1.2; margin: 30px 0 8px; font-weight: 850; }
+h2 { font-size: 25px; margin: 0 0 6px; font-weight: 800; }
+.lead { font-size: 19px; color: var(--text-secondary); margin: 0 0 18px; max-width: 860px; }
+.ai { color: var(--ai); font-weight: 800; } .rule { color: var(--rule); font-weight: 800; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; }
+.stepno { display: inline-flex; width: 34px; height: 34px; border-radius: 50%; background: var(--ai); color: #fff; align-items: center; justify-content: center; font-weight: 800; margin-right: 10px; font-size: 18px; vertical-align: 2px; }
+
+/* scenarios */
+.scenarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.scn { text-align: left; padding: 16px; border-radius: 16px; display: flex; flex-direction: column; gap: 4px; min-height: 128px; }
+.scn .em { font-size: 34px; line-height: 1; }
+.scn b { font-size: 17px; }
+.scn span { font-size: 14px; color: var(--text-secondary); line-height: 1.35; }
+.scn.on { border: 3px solid var(--ai); padding: 14px; background: color-mix(in srgb, var(--ai) 8%, var(--card)); }
+.more { margin-top: 12px; }
+.more summary { cursor: pointer; color: var(--text-secondary); font-size: 16px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip { border-radius: 999px; font-size: 15px; padding: 7px 14px; }
+.chip.on { background: var(--ai); color: #fff; border-color: transparent; }
+
+/* watch */
+.playrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.speed { display: inline-flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.speed button { border: 0; border-radius: 0; }
+.speed button.on { background: var(--soft); font-weight: 700; }
+.clock { margin-left: auto; font-size: 15px; color: var(--muted); }
+.clock b { font-size: 26px; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.narrator { display: flex; gap: 14px; align-items: center; margin-top: 16px; padding: 16px 20px; border-radius: 16px; background: var(--card);
+  border: 1px solid var(--border); border-left: 7px solid var(--muted); font-size: 21px; font-weight: 650; min-height: 74px; }
+.narrator .ic { font-size: 30px; }
+.narrator.bad { border-left-color: var(--bad); } .narrator.warn { border-left-color: var(--warn); }
+.narrator.good { border-left-color: var(--done); } .narrator.lead-ai { border-left-color: var(--ai); } .narrator.lead-rule { border-left-color: var(--rule); }
+.tug { margin-top: 14px; }
+.tug .labels { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 5px; }
+.tug .bar { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: var(--soft); }
+.tug .bar > div { transition: width .3s; }
+.arena { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px; }
+@media (max-width: 860px) { .arena { grid-template-columns: 1fr; } h1 { font-size: 27px; } }
+.team { border-radius: 18px; background: var(--card); border: 1px solid var(--border); overflow: hidden; }
+.team .head { padding: 12px 16px; color: #fff; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.team.ai .head { background: var(--ai); } .team.rule .head { background: var(--rule); }
+.team .head b { font-size: 21px; } .team .head span { font-size: 14px; opacity: .92; }
+.nums { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 12px 16px 6px; }
+.nums .v { font-size: 34px; font-weight: 850; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.nums .v small { font-size: 18px; color: var(--muted); font-weight: 700; }
+.nums .l { font-size: 14px; color: var(--text-secondary); }
+.mapwrap { padding: 8px 12px 12px; }
+.mapwrap canvas { width: 100%; aspect-ratio: 1/1; display: block; border-radius: 12px; border: 1px solid var(--border); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 14px; font-size: 15.5px; color: var(--text-secondary); align-items: center; }
+.legend .k { display: inline-flex; align-items: center; gap: 7px; }
+.dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; }
+.tip { position: fixed; z-index: 50; pointer-events: none; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 12px; font-size: 14.5px; box-shadow: 0 8px 22px rgba(0,0,0,.2); display: none; }
+.verdict { margin-top: 18px; padding: 22px 24px; border-radius: 18px; background: var(--card); border: 3px solid var(--ai); }
+.verdict.v-rule { border-color: var(--rule); } .verdict.v-tie { border-color: var(--muted); }
+.verdict h3 { font-size: 30px; margin: 0 0 8px; }
+.verdict ul { margin: 6px 0 12px; padding-left: 22px; font-size: 18px; }
+.verdict .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* results */
+.picto { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; max-width: 560px; margin: 14px 0; }
+.picto div { aspect-ratio: 1/1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 8px; }
+.fact { display: flex; gap: 12px; align-items: flex-start; }
+.fact .em { font-size: 30px; }
+.fact b { font-size: 22px; display: block; }
+.fact span { color: var(--text-secondary); font-size: 15.5px; }
+.note { color: var(--muted); font-size: 14.5px; margin-top: 12px; }
+.journey { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch; }
+.journey .arrow { display: flex; align-items: center; font-size: 28px; color: var(--muted); }
+@media (max-width: 860px) { .journey { grid-template-columns: 1fr; } .journey .arrow { justify-content: center; transform: rotate(90deg); } }
+.journey .card { text-align: center; }
+.journey .em { font-size: 36px; } .journey .ttl { display: block; font-size: 19px; font-weight: 800; margin: 4px 0; }
+.journey span { color: var(--text-secondary); font-size: 15.5px; }
+.faq details { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; }
+.faq summary { padding: 14px 18px; font-weight: 700; cursor: pointer; font-size: 17px; }
+.faq p { margin: 0; padding: 0 18px 16px; color: var(--text-secondary); font-size: 16px; }
+footer { text-align: center; color: var(--muted); font-size: 14px; margin-top: 40px; }
+
+/* onboarding */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 60; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-bg.show { display: flex; }
+.modal { background: var(--card); border-radius: 22px; max-width: 520px; width: 100%; padding: 30px 30px 22px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.modal .em { font-size: 64px; line-height: 1; }
+.modal h3 { font-size: 26px; margin: 12px 0 8px; }
+.modal p { font-size: 18px; color: var(--text-secondary); margin: 0 0 20px; }
+.modal .dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.modal .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--grid); display: block; }
+.modal .dots i.on { background: var(--ai); }
+.modal .row { display: flex; justify-content: space-between; gap: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🛰 Drone Yarışı</span>
+  <span class="sp"></span>
+  <button id="howBtn">❓ Nasıl çalışır?</button>
+  <button id="themeBtn" title="Açık / koyu tema">◐</button>
+  <a class="tech" href="/panel">Teknik panel →</a>
+</header>
+
+<main>
+<h1>Drone sürüsünü kim daha iyi yönetir?</h1>
+<p class="lead">Dronelar haritadaki yerleri gözlemlemek için uçuyor. Solda <span class="ai">🤖 yapay zekâ</span>, sağda <span class="rule">📏 basit bir kural</span>
+  aynı görevi aynı anda yönetiyor. <b>Daha çok bilgi toplayan kazanır.</b> Bir yere geç kalınca oradaki bilgi eskidiği için hızlı olmak da önemli.</p>
+
+<!-- 1. choose -->
+<section style="margin-top:14px">
+  <h2><span class="stepno">1</span>Bir görev seç</h2>
+  <div class="scenarios" id="featured"></div>
+  <details class="more"><summary>Diğer görevler (<span id="moreCount"></span>)</summary><div class="chips" id="others"></div></details>
+</section>
+
+<!-- 2. watch -->
+<section id="watch">
+  <h2><span class="stepno">2</span>İzle</h2>
+  <div class="playrow">
+    <button class="go" id="playBtn">▶ İzle</button>
+    <button id="restartBtn">⟲ Baştan</button>
+    <div class="speed"><button data-s="30">🐢 Yavaş</button><button data-s="80" class="on">🐇 Hızlı</button></div>
+    <span class="clock">Görev saati <b id="clock">00:00</b></span>
+  </div>
+  <div class="narrator" id="narrator"><span class="ic">👆</span><span>Bir görev seç ve <b>▶ İzle</b>'ye bas.</span></div>
+  <div class="tug"><div class="labels"><span class="ai">🤖 Yapay zekâ</span><span id="tugText"></span><span class="rule">Basit kural 📏</span></div>
+    <div class="bar"><div id="tugA" style="width:50%;background:var(--ai)"></div><div id="tugB" style="width:50%;background:var(--rule)"></div></div></div>
+  <div class="arena">
+    <div class="team ai"><div class="head"><b>🤖 Yapay zekâ</b><span>kendi kendine öğrendi</span></div>
+      <div class="nums"><div><div class="v" id="aObs">0</div><div class="l">yer gözlendi</div></div><div><div class="v" id="aInfo">%0</div><div class="l">bilgi toplandı</div></div></div>
+      <div class="mapwrap"><canvas id="cvA" aria-label="Yapay zekânın haritası"></canvas></div></div>
+    <div class="team rule"><div class="head"><b>📏 Basit kural</b><span>"her zaman en yakın yere git"</span></div>
+      <div class="nums"><div><div class="v" id="bObs">0</div><div class="l">yer gözlendi</div></div><div><div class="v" id="bInfo">%0</div><div class="l">bilgi toplandı</div></div></div>
+      <div class="mapwrap"><canvas id="cvB" aria-label="Basit kuralın haritası"></canvas></div></div>
+  </div>
+  <div class="legend">
+    <span class="k">▲ <span>Drone (altındaki çizgi: pil)</span></span>
+    <span class="k"><span class="dot" style="border:2.5px solid var(--target)"></span>Gözlenecek yer (büyük = önemli)</span>
+    <span class="k"><span class="dot" style="background:var(--done)"></span>Gözlendi ✓</span>
+    <span class="k"><span style="color:var(--bad);font-weight:800">✕</span>Düşen drone</span>
+    <span class="k">☁ Kötü hava</span>
+  </div>
+  <div id="verdict"></div>
+</section>
+
+<!-- 3. overall -->
+<section id="overall">
+  <h2>500 görevde kim kazandı?</h2>
+  <p class="lead">Tek bir görev şansa bağlı olabilir. Bu yüzden ikisi, daha önce hiç görülmemiş <b>500 farklı görevde</b> yarıştırıldı.</p>
+  <div class="card" id="overallBody">Sonuçlar yükleniyor…</div>
+</section>
+
+<!-- 4. learning -->
+<section>
+  <h2>Yapay zekâ bunu nasıl öğrendi?</h2>
+  <p class="lead">Ona hiçbir kural öğretilmedi. Bir oyunu tekrar tekrar oynayarak ustalaşan biri gibi, deneyerek öğrendi.</p>
+  <div class="journey" id="journey"></div>
+</section>
+
+<!-- 5. faq -->
+<section class="faq">
+  <h2>Sık sorulanlar</h2>
+  <details><summary>Ekranda tam olarak ne görüyorum?</summary><p>Üstten görünen bir harita. ▲ işaretleri drone'lar, daireler gözlenmesi gereken yerler. Bir drone bir yere varınca orada kısa bir süre gözlem yapar ve yer yeşile döner (✓). İki harita aynı görevi gösterir; tek fark kararları kimin verdiği.</p></details>
+  <details><summary>"Bilgi toplandı" yüzdesi neden %100'e ulaşmıyor?</summary><p>Bir yere geç gidildikçe oradan gelen bilgi eskir, uzun uçuşlar risklidir ve kötü havada dronelar daha az net görür. Bu yüzden hiç kimse %100 toplayamaz; önemli olan iki taraf arasındaki farktır.</p></details>
+  <details><summary>Yapay zekâ neden bazen kaybediyor?</summary><p>Her görevi kazanmıyor; bazı görevlerde basit kural şans eseri çok iyi bir sıraya denk gelir. Ama 500 görevin genelinde yapay zekâ çok daha sık kazanıyor. Başka görevler seçerek kendiniz deneyebilirsiniz.</p></details>
+  <details><summary>Basit kural ne yapıyor?</summary><p>İşi biten her drone, kendisine en yakın gözlenmemiş yere gider. Anlaşılır ve hızlıdır ama ileriyi düşünmez: örneğin önemli bir yeri ihmal edebilir ya da iki drone'u gereksiz yere aynı bölgeye gönderebilir.</p></details>
+  <details><summary>Bunlar gerçek dronelar mı?</summary><p>Hayır. Bu bir bilgisayar simülasyonu; bir bilimsel makaledeki görev modeline dayanıyor. Gerçek dünyada rüzgâr, engeller ve iletişim kopması gibi burada olmayan etkiler vardır.</p></details>
+</section>
+<footer>Daha teknik ayrıntılar, eğitim grafikleri ve tüm yöntemler için <a href="/panel">Teknik panel</a>.</footer>
+</main>
+
+<div class="tip" id="tip"></div>
+<div class="modal-bg" id="intro"><div class="modal" role="dialog" aria-modal="true">
+  <div class="dots" id="introDots"></div>
+  <div class="em" id="introEm"></div><h3 id="introTitle"></h3><p id="introText"></p>
+  <div class="row"><button id="introSkip">Geç</button><button class="go" style="font-size:18px;padding:10px 26px" id="introNext">İleri</button></div>
+</div></div>
+
+<script src="/static/sim_view.js"></script>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const { nf, clock, mmss } = SimView;
+const pct = (v) => "%" + nf(100 * (v || 0));
+async function getJSON(url) { const r = await fetch(url, { cache: "no-store" }); const j = await r.json(); if (!r.ok) throw new Error(j.error || r.statusText); return j; }
+
+// ------------------------------------------------------------ theme
+try { const t = localStorage.getItem("dash-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$("themeBtn").onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("dash-theme", document.documentElement.dataset.theme); } catch (e) {}
+  drawAll();
+};
+
+// ------------------------------------------------------------ onboarding
+const SLIDES = [
+  { em: "🛩", title: "Dronelar görevde", text: "Bir drone sürüsü haritadaki yerleri gözlemlemek için uçuyor. Her drone işini bitirince bir sonraki yere gitmeli." },
+  { em: "🤖 📏", title: "Kim karar veriyor?", text: "Solda yapay zekâ, sağda \"en yakın yere git\" diyen basit bir kural. İkisi de aynı görevi aynı anda yönetiyor." },
+  { em: "🏆", title: "Kim kazanır?", text: "Daha çok bilgi toplayan. Geç kalınan yerden gelen bilgi eskidiği için hızlı olmak da önemli. Bir görev seç, ▶ İzle'ye bas!" },
+];
+let slide = 0;
+function showSlide() {
+  const s = SLIDES[slide];
+  $("introEm").textContent = s.em; $("introTitle").textContent = s.title; $("introText").textContent = s.text;
+  $("introDots").innerHTML = SLIDES.map((_, i) => `<i class="${i === slide ? "on" : ""}"></i>`).join("");
+  $("introNext").textContent = slide === SLIDES.length - 1 ? "Başla" : "İleri";
+}
+function openIntro() { slide = 0; showSlide(); $("intro").classList.add("show"); }
+function closeIntro() { $("intro").classList.remove("show"); try { localStorage.setItem("intro-seen", "1"); } catch (e) {} }
+$("introNext").onclick = () => { if (slide < SLIDES.length - 1) { slide++; showSlide(); } else closeIntro(); };
+$("introSkip").onclick = closeIntro;
+$("howBtn").onclick = openIntro;
+const params = new URLSearchParams(location.search);
+if (!params.has("nointro")) { try { if (!localStorage.getItem("intro-seen")) openIntro(); } catch (e) { openIntro(); } }
+
+// ------------------------------------------------------------ scenarios
+const FEATURED = ["paper_S1", "calm", "losses", "storm", "surge", "hard"];
+const SHORT = {
+  paper_S1: "3 drone, 10 yer. Görev sırasında bir drone düşer.",
+  calm: "Hiç sürpriz yok. Sadece akıllı sıralama önemli.",
+  losses: "Dronelar art arda düşüyor. Kalanlar işi devralmalı.",
+  storm: "Hava bozuluyor, sensörler arızalanıyor.",
+  surge: "Görev boyunca yeni yerler ortaya çıkıyor.",
+  hard: "Her şey bir arada: sık olaylar, zayıf piller.",
+};
+let presets = [], preset = new URLSearchParams(location.search).get("scenario") || "paper_S1", seed = 0;
+async function loadPresets() {
+  presets = await getJSON("/api/presets");
+  const feat = FEATURED.map((id) => presets.find((p) => p.id === id)).filter(Boolean);
+  const others = presets.filter((p) => !FEATURED.includes(p.id));
+  $("featured").innerHTML = feat.map((p) => `<button class="scn" data-id="${p.id}"><span class="em">${p.icon}</span><b>${p.title}</b><span>${SHORT[p.id] || p.description}</span></button>`).join("");
+  $("others").innerHTML = others.map((p) => `<button class="chip" data-id="${p.id}" title="${p.description}">${p.icon} ${p.title}</button>`).join("");
+  $("moreCount").textContent = others.length;
+  document.querySelectorAll("[data-id]").forEach((b) => b.onclick = () => choose(b.dataset.id));
+  choose(preset, false);
+}
+function choose(id, scroll = true) {
+  preset = id;
+  document.querySelectorAll("[data-id]").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
+  if (!FEATURED.includes(id)) document.querySelector(".more").open = true;
+  load();
+  if (scroll) $("watch").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ------------------------------------------------------------ replay
+const sides = { A: { cv: $("cvA"), r: null, hits: [] }, B: { cv: $("cvB"), r: null, hits: [] } };
+let aiRun = null, t = 0, playing = false, last = null, holdUntil = 0, speed = 80, lastT = 0, banner = null;
+async function findAI() {
+  const st = await getJSON("/api/state");
+  const runs = st.runs.filter((r) => r.group === "ppo_entity").sort((a, b) => (a.seed ?? 0) - (b.seed ?? 0));
+  aiRun = (runs.find((r) => r.status === "done") || runs[0])?.name || null;
+}
+async function load() {
+  stop(); t = 0; lastT = 0; banner = null; $("verdict").innerHTML = "";
+  sides.A.r = sides.B.r = null; drawAll();
+  setNarrator("⏳", "Görev hazırlanıyor…", "");
+  const q = `scenario=${preset}&seed=${seed}`;
+  try {
+    const [a, b] = await Promise.all([
+      aiRun ? getJSON(`/api/replay?name=${encodeURIComponent(aiRun)}&model=best&${q}`) : Promise.reject(new Error("Eğitilmiş model bulunamadı")),
+      getJSON(`/api/replay?model=greedy_nearest&${q}`),
+    ]);
+    if (a.scenario !== preset || b.scenario !== preset) return;
+    sides.A.r = SimView.prepare(a); sides.B.r = SimView.prepare(b);
+    setNarrator("👆", "Hazır! ▶ İzle'ye bas.", "");
+    const startAt = Number(params.get("t"));
+    if (startAt > 0 && !load.used) { load.used = true; t = Math.min(startAt, tmax()); lastT = t; banner = null; stop(); if (t >= tmax()) verdict(); }
+  } catch (e) { setNarrator("⚠", "Görev yüklenemedi: " + e.message, "bad"); }
+  drawAll();
+}
+function tmax() { return Math.max(sides.A.r?.tmax || 0, sides.B.r?.tmax || 0); }
+
+// ------------------------------------------------------------ narrator, scores
+function setNarrator(icon, text, tone) {
+  const n = $("narrator");
+  n.className = "narrator" + (tone ? " " + tone : "");
+  n.innerHTML = `<span class="ic">${icon}</span><span>${text}</span>`;
+}
+function updateScores() {
+  const pa = sides.A.r ? SimView.progressAt(sides.A.r, t) : null, pb = sides.B.r ? SimView.progressAt(sides.B.r, t) : null;
+  $("aObs").innerHTML = pa ? `${pa.observed}<small> / ${pa.appeared}</small>` : "–";
+  $("bObs").innerHTML = pb ? `${pb.observed}<small> / ${pb.appeared}</small>` : "–";
+  $("aInfo").textContent = pa ? pct(pa.info) : "–";
+  $("bInfo").textContent = pb ? pct(pb.info) : "–";
+  $("clock").textContent = clock(t);
+  if (!pa || !pb) return;
+  const sum = pa.info + pb.info, share = sum > 0 ? pa.info / sum : 0.5;
+  $("tugA").style.width = (100 * share) + "%"; $("tugB").style.width = (100 * (1 - share)) + "%";
+  const d = pa.info - pb.info;
+  $("tugText").textContent = t <= 0 ? "başlamaya hazır" : Math.abs(d) < 0.005 ? "başa baş" : d > 0 ? "yapay zekâ önde" : "basit kural önde";
+  if (t > 0 && (!banner || performance.now() > banner.until)) {
+    if (t >= tmax()) setNarrator("🏁", "Görev bitti! Sonuç aşağıda.", "");
+    else if (Math.abs(d) < 0.005) setNarrator("⚖", `Başa baş gidiyorlar: ikisi de yaklaşık ${pct(pa.info)} bilgi topladı.`, "");
+    else if (d > 0) setNarrator("🤖", `Yapay zekâ önde: ${pct(pa.info)} bilgi topladı, basit kural ${pct(pb.info)}.`, "lead-ai");
+    else setNarrator("📏", `Basit kural önde: ${pct(pb.info)} bilgi topladı, yapay zekâ ${pct(pa.info)}.`, "lead-rule");
+  }
+}
+function drawAll() {
+  for (const s of Object.values(sides)) s.hits = SimView.draw(s.cv, s.r, t, { trails: true });
+  updateScores();
+}
+
+// ------------------------------------------------------------ playback
+function frame(ts) {
+  if (!playing) return;
+  if (last != null && ts >= holdUntil) t += (ts - last) / 1000 * speed;
+  last = ts;
+  const end = tmax();
+  if (t >= end) { t = end; stop(); verdict(); }
+  // announce events of this frame (events happen at the same times on both maps)
+  const r = sides.A.r;
+  if (r) for (const e of r.events) if (e.time > lastT && e.time <= t) {
+    const s = SimView.eventSentence(e);
+    if (s) { setNarrator(s.icon, s.text, s.tone); banner = { until: performance.now() + 3500 }; holdUntil = ts + 1500; }
+  }
+  lastT = t;
+  drawAll();
+  if (playing) requestAnimationFrame(frame);
+}
+function play() {
+  if (!sides.A.r || !sides.B.r) return;
+  if (t >= tmax()) { t = 0; lastT = 0; $("verdict").innerHTML = ""; }
+  if (t === 0) { setNarrator("🚀", "Görev başladı! Dronelar üsten kalkıyor.", "good"); banner = { until: performance.now() + 2500 }; }
+  playing = true; last = null; $("playBtn").textContent = "⏸ Durdur"; requestAnimationFrame(frame);
+}
+function stop() { playing = false; $("playBtn").textContent = t > 0 && t < tmax() ? "▶ Devam" : t > 0 ? "▶ Tekrar izle" : "▶ İzle"; }
+$("playBtn").onclick = () => playing ? stop() : play();
+$("restartBtn").onclick = () => { stop(); t = 0; lastT = 0; banner = null; $("verdict").innerHTML = ""; setNarrator("👆", "Hazır! ▶ İzle'ye bas.", ""); drawAll(); stop(); };
+document.querySelectorAll(".speed button").forEach((b) => b.onclick = () => {
+  speed = Number(b.dataset.s); document.querySelectorAll(".speed button").forEach((x) => x.classList.toggle("on", x === b));
+});
+window.addEventListener("resize", drawAll);
+
+// ------------------------------------------------------------ verdict
+function verdict() {
+  const a = sides.A.r.metrics, b = sides.B.r.metrics;
+  // One visible rule for the end user: more collected information wins (draw below 0.1 point).
+  const dv = 100 * (a.value_fraction - b.value_fraction), dt = b.makespan - a.makespan, dn = a.n_completed - b.n_completed;
+  const who = Math.abs(dv) < 0.1 ? "tie" : dv > 0 ? "ai" : "rule";
+  const title = who === "tie" ? "🤝 Berabere!" : who === "ai" ? "🏆 Bu görevi yapay zekâ kazandı!" : "🏆 Bu görevi basit kural kazandı!";
+  const reasons = [];
+  if (who !== "tie") reasons.push(`${dv > 0 ? "Yapay zekâ" : "Basit kural"} <b>${nf(Math.abs(dv), 1)} puan daha fazla bilgi</b> topladı (%${nf(100 * a.value_fraction, 1)} – %${nf(100 * b.value_fraction, 1)}).`);
+  if (Math.abs(dt) >= 5) reasons.push(`${dt > 0 ? "Yapay zekâ" : "Basit kural"} görevi <b>${mmss(Math.abs(dt))} daha erken</b> bitirdi.`);
+  if (dn !== 0) reasons.push(`${dn > 0 ? "Yapay zekâ" : "Basit kural"} <b>${Math.abs(dn)} yer daha fazla</b> gözledi.`);
+  if (!reasons.length) reasons.push("İkisi neredeyse aynı sonucu aldı.");
+  const note = who === "rule" ? "Yapay zekâ her görevi kazanmıyor. 500 görevlik genel sonuca aşağıdan bakabilirsin." :
+    "Kazanan: daha çok bilgi toplayan taraf.";
+  $("verdict").innerHTML = `<div class="verdict ${who === "tie" ? "v-tie" : who === "rule" ? "v-rule" : ""}"><h3>${title}</h3><ul>${reasons.map((x) => `<li>${x}</li>`).join("")}</ul>
+    <p class="note" style="margin-top:0">${note}</p>
+    <div class="btns"><button id="againBtn">🔁 Tekrar izle</button><button id="otherBtn">🎲 Başka bir görev dene</button></div></div>`;
+  $("againBtn").onclick = () => { t = 0; lastT = 0; $("verdict").innerHTML = ""; play(); };
+  $("otherBtn").onclick = () => {
+    const pool = presets.map((p) => p.id).filter((id) => id !== preset);
+    choose(pool[Math.floor(Math.random() * pool.length)]);
+  };
+  $("verdict").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// ------------------------------------------------------------ hover help
+function hover(ev, s) {
+  const rect = s.cv.getBoundingClientRect(), x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+  let best = null, bd = Infinity;
+  for (const h of s.hits) { const d = Math.hypot(h.x - x, h.y - y); if (d < h.r && d < bd) { best = h; bd = d; } }
+  const tip = $("tip");
+  if (!best) { tip.style.display = "none"; return; }
+  tip.innerHTML = best.html; tip.style.display = "block";
+  tip.style.left = Math.min(ev.clientX + 14, innerWidth - 260) + "px"; tip.style.top = (ev.clientY + 14) + "px";
+}
+for (const s of Object.values(sides)) { s.cv.onmousemove = (ev) => hover(ev, s); s.cv.onmouseleave = () => { $("tip").style.display = "none"; }; }
+
+// ------------------------------------------------------------ overall results & learning journey
+async function loadOverall() {
+  let res;
+  try { res = await getJSON("/api/results"); } catch (e) { return; }
+  if (res.status !== "ready") { $("overallBody").textContent = "Genel sonuçlar henüz hazır değil."; return; }
+  const by = Object.fromEntries(res.methods.map((m) => [m.method, m]));
+  const ai = by.ppo_entity, rule = by.greedy_nearest, w = res.wins_info || res.wins;
+  if (!ai || !rule) return;
+  const per10 = w ? Math.round(10 * w.wins / w.n) : null;
+  const boxes = per10 == null ? "" : Array.from({ length: 10 }, (_, i) =>
+    `<div style="background:${i < per10 ? "var(--ai)" : "var(--rule)"}">${i < per10 ? "🤖" : "📏"}</div>`).join("");
+  const dv = 100 * (ai.value_fraction - rule.value_fraction), dt = rule.makespan - ai.makespan;
+  $("overallBody").innerHTML = `
+    ${w ? `<div style="font-size:24px;font-weight:800">🤖 Yapay zekâ, ${w.n} görevden <span class="ai">${w.wins}</span> tanesinde basit kuralı yendi.</div>
+    <div style="font-size:16px;color:var(--text-secondary);margin-top:4px">${w.losses} görevde basit kural kazandı${w.ties ? `, ${w.ties} görev berabere bitti` : ""}. (Kazanan: daha çok bilgi toplayan.)</div>
+    <div class="picto" aria-label="Her 10 görevden ${per10} tanesini yapay zekâ kazanıyor">${boxes}</div>
+    <div style="font-size:18px;color:var(--text-secondary)">Yani kabaca <b>her 10 görevden ${per10} tanesini</b> yapay zekâ, ${10 - per10} tanesini basit kural kazanıyor.</div>` : ""}
+    <div class="facts" style="margin-top:18px">
+      <div class="fact"><span class="em">📚</span><div><b>${nf(dv, 1)} puan daha fazla bilgi</b><span>Ortalamada yapay zekâ %${nf(100 * ai.value_fraction, 1)}, basit kural %${nf(100 * rule.value_fraction, 1)} topladı.</span></div></div>
+      <div class="fact"><span class="em">⏱</span><div><b>${nf(dt)} saniye daha erken</b><span>Görevleri ortalamada ${nf(ai.makespan / 60, 1)} dakikada bitirdi (basit kural: ${nf(rule.makespan / 60, 1)} dk).</span></div></div>
+      ${res.latency_ms?.ppo_entity ? `<div class="fact"><span class="em">⚡</span><div><b>Göz açıp kapayıncaya kadar</b><span>Her kararı yaklaşık ${nf(res.latency_ms.ppo_entity, 1)} milisaniyede veriyor.</span></div></div>` : ""}
+    </div>
+    <p class="note">Fark küçük ama tutarlı: yapay zekâ 5 kez sıfırdan eğitildi ve beşinde de aynı sonuç çıktı. Bunlar bir bilgisayar simülasyonunun sonuçlarıdır.</p>`;
+}
+async function loadJourney() {
+  let start = null, end = null, cross = null, rule = null;
+  try {
+    const [st, base] = await Promise.all([getJSON("/api/state"), getJSON("/api/baselines")]);
+    rule = base.methods?.greedy_nearest?.value_fraction ?? null;
+    const runs = st.runs.filter((r) => r.group === "ppo_entity");
+    const series = await Promise.all(runs.map((r) => getJSON("/api/run?name=" + encodeURIComponent(r.name)).catch(() => null)));
+    const curves = series.filter(Boolean).map((s) => s.validation);
+    if (curves.length) {
+      const at = (i) => curves.reduce((a, c) => a + (c.value_fraction[Math.min(i, c.value_fraction.length - 1)] || 0), 0) / curves.length;
+      start = at(0); end = at(1e9);
+      if (rule != null) { const c = curves[0]; for (let i = 0; i < c.timesteps.length; i++) if (at(i) >= rule) { cross = c.timesteps[i]; break; } }
+    }
+  } catch (e) {}
+  const words = (v) => v >= 1e6 ? nf(v / 1e6, 1) + " milyon" : nf(v / 1e3) + " bin";
+  $("journey").innerHTML = `
+    <div class="card"><div class="em">🎲</div><span class="ttl">Başta acemi</span><span>İlk denemelerinde neredeyse rastgele karar verdi${start != null ? `; topladığı bilgi ancak <b>%${nf(100 * start)}</b> kadardı` : ""}.</span></div>
+    <div class="arrow">→</div>
+    <div class="card"><div class="em">🔁</div><span class="ttl">Deneyerek gelişti</span><span>Binlerce görevi oynadı; iyi sonuç veren kararları daha sık vermeyi öğrendi${cross ? `. Yaklaşık <b>${words(cross)} karar</b> sonra basit kuralı geçti` : ""}.</span></div>
+    <div class="arrow">→</div>
+    <div class="card"><div class="em">🎓</div><span class="ttl">Sonunda usta</span><span>Eğitimin sonunda sınav görevlerinde${end != null ? ` <b>%${nf(100 * end)}</b> bilgi toplar hâle geldi` : " basit kuraldan daha iyi hâle geldi"}${rule != null ? ` (aynı sınavda basit kural: %${nf(100 * rule)})` : ""}.</span></div>`;
+}
+
+// ------------------------------------------------------------ boot
+(async () => {
+  try { await findAI(); } catch (e) {}
+  await loadPresets();
+  loadOverall(); loadJourney();
+})();
+</script>
+</body>
+</html>

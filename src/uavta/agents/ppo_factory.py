@@ -36,8 +36,10 @@ class PPOConfig(BaseModel):
     net_arch_vf: list[int] = Field(default_factory=lambda: [256, 256])
     activation: str = "tanh"
     use_masking: bool = True
-    policy: str = "mlp"  # "mlp" (flat MLP, default) | "entity" (shared per-target scorer)
+    policy: str = "mlp"  # "mlp" (flat MLP) | "entity" (shared per-target scorer) | "attention"
     entity_hidden: int = Field(128, gt=0)
+    attention_layers: int = Field(2, gt=0)
+    attention_heads: int = Field(4, gt=0)
 
 
 def make_model(
@@ -62,7 +64,7 @@ def make_model(
         "net_arch": {"pi": config.net_arch_pi, "vf": config.net_arch_vf},
         "activation_fn": activation,
     }
-    if config.policy == "entity":
+    if config.policy in ("entity", "attention"):
         if not config.use_masking:
             raise ValueError("the entity policy is implemented for MaskablePPO only")
         from uavta.agents.entity_policy import EntityMaskablePolicy
@@ -74,6 +76,9 @@ def make_model(
             "max_targets": env_cfg.max_targets,
             "entity_hidden": config.entity_hidden,
         }
+        if config.policy == "attention":
+            policy_kwargs["attention_layers"] = config.attention_layers
+            policy_kwargs["attention_heads"] = config.attention_heads
     elif config.policy != "mlp":
         raise ValueError(f"unknown policy {config.policy!r}")
     return algo(
@@ -123,6 +128,20 @@ class PPOPolicy:
 
     def reset(self, env: MultiUAVDynamicEnv, seed: int | None = None) -> None:
         return None
+
+    def action_probabilities(self, obs: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        """Policy probabilities over all actions; masked actions get probability 0."""
+        import torch
+
+        obs_t, _ = self.model.policy.obs_to_tensor(obs)
+        with torch.no_grad():
+            if self.use_masking:
+                dist = self.model.policy.get_distribution(obs_t, action_masks=mask)
+            else:
+                dist = self.model.policy.get_distribution(obs_t)
+            probs = dist.distribution.probs[0].cpu().numpy().astype(np.float64)
+        probs[~mask] = 0.0
+        return probs
 
     def act(self, env: MultiUAVDynamicEnv, obs: np.ndarray, mask: np.ndarray) -> int:
         if self.use_masking:

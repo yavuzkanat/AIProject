@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -58,16 +59,82 @@ def _make_env_fn(env_config: EnvConfig, rank: int, seed: int) -> Any:
     return _init
 
 
-def train(config: TrainConfig, out_root: str | Path = "results/runs") -> Path:
-    """Run training and write model, configuration, provenance and logs to a run directory."""
+# Files a training run writes; removed before a partial run is restarted from scratch.
+RUN_FILES = (
+    "progress.csv",
+    "validation.csv",
+    "best_model.zip",
+    "final_model.zip",
+    "training_summary.json",
+    "config.yaml",
+    "versions.json",
+)
+LOCK_FILE = ".training.lock"
+
+
+class RunInProgressError(RuntimeError):
+    """Another live process is already training this run directory."""
+
+
+def _pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def prepare_run_dir(run_dir: Path, force: bool) -> bool:
+    """Make ``run_dir`` ready for a fresh run. Returns False if the run is complete and kept.
+
+    * Completed run (``training_summary.json`` present) and not ``force``: left untouched.
+    * Another live process holds the lock: :class:`RunInProgressError`.
+    * Otherwise (new, partial, or forced): stale files are removed so logs never mix runs.
+    """
+    lock = run_dir / LOCK_FILE
+    if lock.exists():
+        try:
+            pid = int(lock.read_text().strip() or "0")
+        except ValueError:
+            pid = 0
+        if pid and pid != os.getpid() and _pid_alive(pid):
+            raise RunInProgressError(f"{run_dir.name} is being trained by process {pid}")
+    if (run_dir / "training_summary.json").exists() and not force:
+        return False
+    run_dir.mkdir(parents=True, exist_ok=True)
+    for name in RUN_FILES:
+        (run_dir / name).unlink(missing_ok=True)
+    lock.write_text(str(os.getpid()))
+    return True
+
+
+def train(config: TrainConfig, out_root: str | Path = "results/runs", force: bool = False) -> Path:
+    """Run training and write model, configuration, provenance and logs to a run directory.
+
+    Completed runs are skipped unless ``force`` is set; interrupted runs restart from scratch
+    (SB3 cannot resume a PPO run bit-identically, and a fresh run with the same seed reproduces
+    the original exactly on the CPU).
+    """
+    run_dir = Path(out_root) / f"{config.name}_seed{config.seed}"
+    if not prepare_run_dir(run_dir, force):
+        logger.info("%s already completed; skipping (use --force to retrain)", run_dir.name)
+        return run_dir
+    try:
+        _train(config, run_dir)
+    finally:
+        (run_dir / LOCK_FILE).unlink(missing_ok=True)
+    return run_dir
+
+
+def _train(config: TrainConfig, run_dir: Path) -> None:
     import torch
     from stable_baselines3.common.logger import configure
     from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
     from uavta.agents.callbacks import ValidationCallback
 
-    run_dir = Path(out_root) / f"{config.name}_seed{config.seed}"
-    run_dir.mkdir(parents=True, exist_ok=True)
     seed_everything(config.seed)
     torch.set_num_threads(config.torch_threads)
     device = resolve_device(config.device)
@@ -112,4 +179,3 @@ def train(config: TrainConfig, out_root: str | Path = "results/runs") -> Path:
             indent=2,
         )
     )
-    return run_dir

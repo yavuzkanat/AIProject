@@ -30,7 +30,9 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-STATIC = Path(__file__).with_name("dashboard.html")
+STATIC = Path(__file__).with_name("dashboard.html")  # full panel (simulation + training details)
+SIMPLE_PAGE = Path(__file__).with_name("simple.html")  # end-user page served at "/"
+STATIC_FILES = {"/static/sim_view.js": (Path(__file__).with_name("sim_view.js"), "text/javascript")}
 ACTIVE_WINDOW_S = 120.0  # a run is "running" if its logs changed this recently
 PROGRESS_KEYS = (
     "time/total_timesteps",
@@ -47,6 +49,244 @@ PROGRESS_KEYS = (
     "train/learning_rate",
 )
 VALIDATION_KEYS = ("timesteps", "weighted_score", "value_fraction", "makespan", "completion_rate")
+DEMO_SEED_BASE = 5_000_000  # demo scenarios never overlap training/validation/test/OOD seeds
+
+_ALL_ZERO = {
+    "new_target": 0.0,
+    "uav_crash": 0.0,
+    "sensor_damage": 0.0,
+    "weather": 0.0,
+    "target_move": 0.0,
+    "value_change": 0.0,
+}
+# Scenario library of the replay panel. Generated presets are ordinary GeneratorConfig dicts.
+_RATES = {
+    "new_target": 3.0,
+    "uav_crash": 1.5,
+    "sensor_damage": 3.0,
+    "weather": 3.0,
+    "target_move": 3.0,
+    "value_change": 3.0,
+}
+
+
+def _preset(pid: str, group: str, icon: str, title: str, desc: str, **gen: Any) -> dict[str, Any]:
+    return {
+        "id": pid,
+        "kind": "generated",
+        "group": group,
+        "icon": icon,
+        "title": title,
+        "description": desc,
+        "generator": gen,
+    }
+
+
+_PAPER = "Makaledeki görevler"
+_EVENTS = "Beklenmedik olaylar"
+_SIZE = "Sürü ve görev büyüklüğü"
+_ENERGY = "Batarya ve öncelik"
+
+# Scenario library of the replay panel (20 scenarios). Generated presets are GeneratorConfig
+# dicts; their seeds come from DEMO_SEED_BASE and never overlap the evaluation seeds.
+PRESETS: list[dict[str, Any]] = [
+    {
+        "id": "paper_S1",
+        "kind": "paper",
+        "variant": "S1",
+        "group": _PAPER,
+        "icon": "🗺",
+        "title": "Küçük görev",
+        "description": "Makaledeki S1: 3 drone, 10 hedef; 1 drone düşer, 1 yeni hedef çıkar.",
+    },
+    {
+        "id": "paper_S2",
+        "kind": "paper",
+        "variant": "S2",
+        "group": _PAPER,
+        "icon": "🗺",
+        "title": "Orta görev",
+        "description": "Makaledeki S2: 4 drone, 14 hedef; hedef yer değiştirir, sensör bozulur.",
+    },
+    {
+        "id": "paper_S3",
+        "kind": "paper",
+        "variant": "S3",
+        "group": _PAPER,
+        "icon": "🗺",
+        "title": "Zor görev",
+        "description": "Makaledeki S3: 5 drone, 18 hedef; 2 drone düşer, fırtına çıkar.",
+    },
+    _preset(
+        "calm",
+        _EVENTS,
+        "🌤",
+        "Sakin gün",
+        "Hiç sürpriz yok; sadece hedeflerin akıllı sırayla gezilmesi önemli.",
+        n_uavs=[4, 4],
+        n_targets=[12, 12],
+        event_rates=_ALL_ZERO,
+    ),
+    _preset(
+        "crisis",
+        _EVENTS,
+        "🚨",
+        "Kriz günü",
+        "Her şey ters gidiyor: kayıplar, yeni hedefler, kötü hava, hepsi sık sık.",
+        n_uavs=[5, 5],
+        n_targets=[14, 14],
+        event_rates={k: 3 * v for k, v in _RATES.items()},
+    ),
+    _preset(
+        "losses",
+        _EVENTS,
+        "💥",
+        "Drone kayıpları",
+        "Dronelar art arda düşer; kalanlar boşalan işleri devralmalı.",
+        n_uavs=[5, 5],
+        n_targets=[14, 14],
+        event_rates={**_ALL_ZERO, "uav_crash": 5.0},
+    ),
+    _preset(
+        "storm",
+        _EVENTS,
+        "⛈",
+        "Fırtına",
+        "Hava bozulur, sensörler arızalanır; gözlem kalitesi düşer.",
+        n_uavs=[4, 4],
+        n_targets=[12, 12],
+        event_rates={**_ALL_ZERO, "weather": 8.0, "sensor_damage": 8.0},
+    ),
+    _preset(
+        "fog",
+        _EVENTS,
+        "🌫",
+        "Sisli sabah",
+        "Görevin hemen başında sis çöker; kameralar baştan zayıf görür.",
+        n_uavs=[4, 4],
+        n_targets=[12, 12],
+        event_window=150.0,
+        event_rates={**_ALL_ZERO, "weather": 20.0},
+    ),
+    _preset(
+        "moving",
+        _EVENTS,
+        "🏃",
+        "Hareketli hedefler",
+        "Hedefler yer değiştirir, yenileri çıkar; rotalar sürekli değişir.",
+        n_uavs=[4, 4],
+        n_targets=[10, 10],
+        event_rates={**_ALL_ZERO, "target_move": 10.0, "new_target": 6.0},
+    ),
+    _preset(
+        "surge",
+        _EVENTS,
+        "📍",
+        "Hedef yağmuru",
+        "Az hedefle başlar, görev boyunca birçok yeni hedef ortaya çıkar.",
+        n_uavs=[4, 4],
+        n_targets=[6, 6],
+        event_rates={**_ALL_ZERO, "new_target": 15.0},
+    ),
+    _preset(
+        "value_drop",
+        _EVENTS,
+        "📉",
+        "Önemini yitiren hedefler",
+        "Bazı hedeflerin önemi görev sırasında azalır; öncelik sırası değişir.",
+        n_uavs=[4, 4],
+        n_targets=[14, 14],
+        event_rates={**_ALL_ZERO, "value_change": 15.0},
+    ),
+    _preset(
+        "small_team",
+        _SIZE,
+        "👥",
+        "Küçük ekip",
+        "Sadece 2 drone ile 8 hedef: her karar daha önemli.",
+        n_uavs=[2, 2],
+        n_targets=[8, 8],
+    ),
+    _preset(
+        "large",
+        _SIZE,
+        "🐝",
+        "Büyük sürü",
+        "6 drone ve 20 hedef: eğitimde görülenden daha büyük bir görev.",
+        n_uavs=[6, 6],
+        n_targets=[20, 20],
+    ),
+    _preset(
+        "many_targets",
+        _SIZE,
+        "🎯",
+        "Kalabalık hedef",
+        "4 drone, 22 hedef: işi dengeli paylaştırmak gerekir.",
+        n_uavs=[4, 4],
+        n_targets=[22, 22],
+    ),
+    _preset(
+        "single_type",
+        _SIZE,
+        "✈",
+        "Tek tip drone",
+        "Bütün dronelar aynı (daha kısa pilli, 2 sensörlü) tipte.",
+        n_uavs=[4, 4],
+        n_targets=[12, 12],
+        uav_type_probs={"A": 1.0},
+    ),
+    _preset(
+        "low_battery",
+        _ENERGY,
+        "🪫",
+        "Zayıf batarya",
+        "Piller normalin %60'ı: her hedefe yetişmek mümkün olmayabilir.",
+        n_uavs=[4, 4],
+        n_targets=[14, 14],
+        endurance_scale=0.6,
+    ),
+    _preset(
+        "long_range",
+        _ENERGY,
+        "🔋",
+        "Güçlü batarya",
+        "Piller normalin 1,5 katı: enerji sorun değil, sıralama önemli.",
+        n_uavs=[4, 4],
+        n_targets=[14, 14],
+        endurance_scale=1.5,
+    ),
+    _preset(
+        "vip",
+        _ENERGY,
+        "💎",
+        "Birkaç çok önemli hedef",
+        "Hedeflerin çoğu sıradan, birkaçı çok değerli: onları kaçırmamak gerek.",
+        n_uavs=[4, 4],
+        n_targets=[14, 14],
+        value_distribution="skewed",
+    ),
+    _preset(
+        "extremes",
+        _ENERGY,
+        "⚖",
+        "Ya çok önemli ya önemsiz",
+        "Hedefler iki uçta: ya çok değerli ya da çok az değerli.",
+        n_uavs=[4, 4],
+        n_targets=[14, 14],
+        value_distribution="bimodal",
+    ),
+    _preset(
+        "hard",
+        _ENERGY,
+        "🔥",
+        "En zor mod",
+        "Olaylar iki kat sık, piller %70: her şey bir arada.",
+        n_uavs=[5, 5],
+        n_targets=[16, 16],
+        endurance_scale=0.7,
+        event_rates={k: 2 * v for k, v in _RATES.items()},
+    ),
+]
 
 
 def _float(x: str | None) -> float | None:
@@ -88,7 +328,7 @@ class DashboardData:
         self.cache_dir = cache_dir
         self.n_validation = n_validation
         self._baselines: dict[str, Any] = {"status": "pending"}
-        self._replays: dict[tuple[str, str, str, float], dict[str, Any]] = {}
+        self._replays: dict[tuple[str, str, str, float, int], dict[str, Any]] = {}
         self._lock = threading.Lock()
         threading.Thread(target=self._compute_baselines, daemon=True).start()
 
@@ -216,49 +456,102 @@ class DashboardData:
             with self._lock:
                 self._baselines = {"status": "error", "error": str(exc)}
 
-    # ---------------------------------------------------------------- replay
+    # ---------------------------------------------------------------- scenarios & replay
 
-    def replay(self, name: str, scenario: str, model: str) -> dict[str, Any]:
-        from uavta.baselines.heuristics import GreedyValueRatePolicy
-        from uavta.environment.env import MultiUAVDynamicEnv
-        from uavta.evaluation.runner import ScenarioRef, run_episode
+    def presets(self) -> list[dict[str, Any]]:
+        return [{k: v for k, v in p.items() if k != "generator"} for p in PRESETS]
+
+    def _scenario(self, preset_id: str, seed: int) -> Any:
+        from uavta.scenarios.generator import GeneratorConfig, ScenarioGenerator
         from uavta.scenarios.loader import load_paper_scenario
 
-        if scenario not in ("S1", "S2", "S3"):
-            raise ValueError("scenario must be S1, S2 or S3")
-        if model == "greedy":
-            policy: Any = GreedyValueRatePolicy()
-            mtime = 0.0
-            label = "greedy_value_rate"
+        if preset_id in ("S1", "S2", "S3"):  # short names used by older clients
+            preset_id = f"paper_{preset_id}"
+        preset = next((p for p in PRESETS if p["id"] == preset_id), None)
+        if preset is None:
+            raise ValueError(f"unknown scenario {preset_id!r}")
+        if preset["kind"] == "paper":
+            return load_paper_scenario(preset["variant"])
+        cfg = GeneratorConfig.model_validate(preset["generator"])
+        return ScenarioGenerator(cfg, name=preset_id).generate(DEMO_SEED_BASE + seed)
+
+    def _policy(self, name: str, model: str) -> tuple[Any, str, float]:
+        """Return (policy, label, model mtime) for a run checkpoint or a baseline."""
+        from uavta.evaluation.experiments import BASELINES
+
+        alias = {"greedy": "greedy_value_rate"}
+        model = alias.get(model, model)
+        if model in BASELINES:
+            return BASELINES[model](), model, 0.0
+        if model not in ("best", "final", "lookahead"):
+            raise ValueError(f"unknown model {model!r}")
+        file = "best" if model == "lookahead" else model
+        path = self._run_dir(name) / f"{file}_model.zip"
+        if not path.exists():
+            raise FileNotFoundError(f"{path.name} not written yet")
+        import torch
+
+        from uavta.agents.ppo_factory import PPOPolicy
+
+        torch.set_num_threads(1)
+        label = f"{name}/{path.name}"
+        policy: Any = PPOPolicy.load(path, name=label)
+        if model == "lookahead":
+            from uavta.agents.lookahead import LookaheadPolicy
+
+            policy = LookaheadPolicy(policy, top_k=2, samples=0)
+            label += " + ileriye bakma (k=2)"
+        return policy, label, path.stat().st_mtime
+
+    def replay(self, name: str, scenario: str, model: str, seed: int = 0) -> dict[str, Any]:
+        """Run one recorded episode for the animated map (cached per inputs and checkpoint)."""
+        from uavta.environment.env import MultiUAVDynamicEnv
+        from uavta.evaluation.runner import ScenarioRef, run_episode
+
+        if model in ("best", "final", "lookahead"):
+            path = self._run_dir(name) / f"{'best' if model == 'lookahead' else model}_model.zip"
+            mtime = path.stat().st_mtime if path.exists() else -1.0
         else:
-            if model not in ("best", "final"):
-                raise ValueError("model must be best, final or greedy")
-            path = self._run_dir(name) / f"{model}_model.zip"
-            if not path.exists():
-                raise FileNotFoundError(f"{path.name} not written yet")
-            mtime = path.stat().st_mtime
-            label = f"{name}/{path.name}"
-        key = (name if model != "greedy" else "-", scenario, model, mtime)
+            mtime = 0.0
+        key = (
+            name if model in ("best", "final", "lookahead") else "-",
+            scenario,
+            model,
+            mtime,
+            seed,
+        )
         with self._lock:
             if key in self._replays:
                 return self._replays[key]
-        if model != "greedy":
-            import torch
-
-            from uavta.agents.ppo_factory import PPOPolicy
-
-            torch.set_num_threads(1)
-            policy = PPOPolicy.load(path, name=label)
-        sc = load_paper_scenario(scenario)
+        policy, label, _ = self._policy(name, model)
+        sc = self._scenario(scenario, seed)
         rec = run_episode(
-            MultiUAVDynamicEnv(), policy, ScenarioRef(scenario, scenario=sc), keep_logs=True
+            MultiUAVDynamicEnv(),
+            policy,
+            ScenarioRef(scenario, scenario=sc),
+            keep_logs=True,
+            policy_seed=seed,
         )
         data = {
             "label": label,
+            "model": model,
             "scenario": scenario,
+            "seed": seed,
             "model_saved_at": mtime or None,
             "airspace": list(sc.airspace),
-            "uavs": [{"id": u.id, "type": u.uav_type} for u in sc.uavs],
+            "initial_weather": list(sc.initial_weather),
+            "uavs": [
+                {
+                    "id": u.id,
+                    "type": u.uav_type,
+                    "endurance": u.endurance,
+                    "speed": u.speed,
+                    "sensors": [
+                        s for s, has in zip(("VL", "IR", "RD"), u.sensors, strict=True) if has
+                    ],
+                }
+                for u in sc.uavs
+            ],
             "metrics": {
                 k: rec.metrics[k]
                 for k in (
@@ -271,6 +564,9 @@ class DashboardData:
                     "risk_exposure",
                     "termination_reason",
                     "collected_value",
+                    "appeared_value",
+                    "energy_used_total",
+                    "n_operational_end",
                 )
             },
             "activities": [
@@ -294,6 +590,109 @@ class DashboardData:
             self._replays[key] = data
         return data
 
+    # ---------------------------------------------------------------- final results
+
+    @staticmethod
+    def _win_counts(
+        ai: str = "ppo_entity",
+        rival: str = "greedy_nearest",
+        condition: str = "test_id",
+        metric: str = "weighted_score",
+        tie_tol: float = 1e-9,
+    ) -> dict[str, Any] | None:
+        """Per-scenario wins of ``ai`` (mean over seeds) against ``rival`` on ``metric``."""
+        evals = Path("results/eval")
+        sums: dict[str, dict[str, list[float]]] = {ai: {}, rival: {}}
+        for f in sorted(evals.glob("main_*.csv")):
+            for r in read_csv_rows(f):
+                if r.get("condition") != condition or r.get("method") not in sums:
+                    continue
+                v = _float(r.get(metric))
+                if v is not None:
+                    sums[r["method"]].setdefault(r["scenario_ref"], []).append(v)
+        common = sorted(set(sums[ai]) & set(sums[rival]))
+        if not common:
+            return None
+        win = tie = 0
+        for k in common:
+            a = sum(sums[ai][k]) / len(sums[ai][k])
+            b = sum(sums[rival][k]) / len(sums[rival][k])
+            if abs(a - b) <= tie_tol:
+                tie += 1
+            elif a > b:
+                win += 1
+        return {
+            "ai": ai,
+            "rival": rival,
+            "metric": metric,
+            "n": len(common),
+            "wins": win,
+            "ties": tie,
+            "losses": len(common) - win - tie,
+        }
+
+    def results(self) -> dict[str, Any]:
+        """Final test-set summary written by scripts/analyze.py, if available."""
+        tables = Path("results/tables")
+        summary = tables / "summary_test_id.csv"
+        if not summary.exists():
+            return {"status": "missing"}
+        methods = []
+        for r in read_csv_rows(summary):
+            row: dict[str, Any] = {"method": r["method"], "n_seeds": int(float(r["n_seeds"] or 0))}
+            for k in (
+                "weighted_score",
+                "value_fraction",
+                "makespan",
+                "completion_rate",
+                "energy_used_total",
+                "risk_exposure",
+            ):
+                row[k] = _float(r.get(k))
+                row[k + "_spread"] = _float(r.get(k + "_spread"))
+            row["n_scenarios"] = int(float(r["n_scenarios"]))
+            methods.append(row)
+        # Post-study improvements (separate analysis) are appended for the expert view.
+        extra = tables / "summary_improvements.csv"
+        if extra.exists():
+            known = {m["method"] for m in methods}
+            for r in read_csv_rows(extra):
+                if r["method"] in known:
+                    continue
+                row = {
+                    "method": r["method"],
+                    "n_seeds": int(float(r["n_seeds"] or 0)),
+                    "n_scenarios": int(float(r["n_scenarios"])),
+                }
+                for k in (
+                    "weighted_score",
+                    "value_fraction",
+                    "makespan",
+                    "completion_rate",
+                    "risk_exposure",
+                ):
+                    row[k] = _float(r.get(k))
+                    row[k + "_spread"] = _float(r.get(k + "_spread"))
+                methods.append(row)
+        out: dict[str, Any] = {"status": "ready", "methods": methods}
+        lat = tables / "latency.json"
+        if lat.exists():
+            out["latency_ms"] = {
+                k: v["median_of_episode_median_ms"] for k, v in json.loads(lat.read_text()).items()
+            }
+        wins = self._win_counts()
+        if wins:
+            out["wins"] = wins  # on J (training objective), used by the technical panel
+        # The end-user page judges a mission by collected information only (one visible rule);
+        # differences below 0.1 percentage point count as a draw, as on that page.
+        wins_info = self._win_counts(metric="value_fraction", tie_tol=0.001)
+        if wins_info:
+            out["wins_info"] = wins_info
+        hyp = tables / "hypotheses.json"
+        if hyp.exists():
+            out["hypotheses"] = json.loads(hyp.read_text())
+        return out
+
 
 def make_handler(data: DashboardData) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
@@ -316,7 +715,12 @@ def make_handler(data: DashboardData) -> type[BaseHTTPRequestHandler]:
             q = {k: v[0] for k, v in parse_qs(url.query).items()}
             try:
                 if url.path in ("/", "/index.html"):
+                    self._send(200, SIMPLE_PAGE.read_bytes(), "text/html; charset=utf-8")
+                elif url.path in ("/panel", "/panel/"):
                     self._send(200, STATIC.read_bytes(), "text/html; charset=utf-8")
+                elif url.path in STATIC_FILES:
+                    path, ctype = STATIC_FILES[url.path]
+                    self._send(200, path.read_bytes(), ctype + "; charset=utf-8")
                 elif url.path == "/api/state":
                     self._json(data.state())
                 elif url.path == "/api/run":
@@ -326,9 +730,16 @@ def make_handler(data: DashboardData) -> type[BaseHTTPRequestHandler]:
                 elif url.path == "/api/replay":
                     self._json(
                         data.replay(
-                            q.get("name", ""), q.get("scenario", "S3"), q.get("model", "best")
+                            q.get("name", ""),
+                            q.get("scenario", "paper_S3"),
+                            q.get("model", "best"),
+                            int(q.get("seed", "0")),
                         )
                     )
+                elif url.path == "/api/presets":
+                    self._json(data.presets())
+                elif url.path == "/api/results":
+                    self._json(data.results())
                 else:
                     self._json({"error": "not found"}, HTTPStatus.NOT_FOUND)
             except (KeyError, ValueError) as exc:

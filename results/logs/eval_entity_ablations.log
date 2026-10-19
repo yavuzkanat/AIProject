@@ -1,0 +1,32 @@
+2026-10-18 23:02:41,953 INFO ppo_entity: 5 trained seeds
+2026-10-18 23:03:05,240 INFO condition test_id done
+2026-10-18 23:03:05,285 INFO condition paper_S1 done
+2026-10-18 23:03:05,344 INFO condition paper_S2 done
+2026-10-18 23:03:05,428 INFO condition paper_S3 done
+wrote 2515 rows to results/eval/main_entity.csv
+2026-10-18 23:03:07,595 INFO ppo_entity: 5 trained seeds
+2026-10-18 23:03:11,468 INFO condition rate_x0 done
+2026-10-18 23:03:15,765 INFO condition rate_x0.5 done
+2026-10-18 23:03:20,706 INFO condition rate_x1 done
+2026-10-18 23:03:26,363 INFO condition rate_x2 done
+2026-10-18 23:03:32,927 INFO condition rate_x4 done
+2026-10-18 23:03:39,263 INFO condition only_new_target done
+2026-10-18 23:03:43,530 INFO condition only_uav_crash done
+2026-10-18 23:03:47,741 INFO condition only_sensor_damage done
+2026-10-18 23:03:51,970 INFO condition only_weather done
+2026-10-18 23:03:56,228 INFO condition only_target_move done
+2026-10-18 23:04:00,465 INFO condition only_value_change done
+2026-10-18 23:04:02,545 INFO condition size_small done
+2026-10-18 23:04:12,208 INFO condition size_large done
+2026-10-18 23:04:17,164 INFO condition endurance_x0.7 done
+2026-10-18 23:04:22,419 INFO condition endurance_x1.3 done
+2026-10-18 23:04:27,498 INFO condition values_bimodal done
+2026-10-18 23:04:32,654 INFO condition values_skewed done
+wrote 8500 rows to results/eval/generalization_entity.csv
+2026-10-18 23:04:35,259 INFO abl_value_only: 3 trained seeds
+2026-10-18 23:04:35,259 INFO abl_w25: 3 trained seeds
+2026-10-18 23:04:35,259 INFO abl_w75: 3 trained seeds
+2026-10-18 23:04:35,259 INFO abl_energy: 3 trained seeds
+2026-10-18 23:04:35,259 INFO abl_unmasked: 3 trained seeds
+2026-10-18 23:05:45,356 INFO condition test_id done
+wrote 7500 rows to results/eval/ablations.csv

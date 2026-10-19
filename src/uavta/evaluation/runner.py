@@ -88,6 +88,8 @@ def run_episode(
                 "completion_time": tg.completion_time,
                 "collected_value": tg.collected_value,
                 "appear_time": tg.appear_time,
+                "initial_value": tg.spec.value,
+                "observation_time": tg.spec.observation_time,
                 "slot": tg.slot,
             }
             for tg in sim.targets

@@ -1,0 +1,42 @@
+{
+  "random": {
+    "median_of_episode_median_ms": 0.005041001713834703,
+    "mean_of_episode_p95_ms": 0.00802620284957811,
+    "mean_decisions_per_episode": 14.5
+  },
+  "greedy_value_rate": {
+    "median_of_episode_median_ms": 0.04338574944995344,
+    "mean_of_episode_p95_ms": 0.07659460662398487,
+    "mean_decisions_per_episode": 15.86
+  },
+  "greedy_nearest": {
+    "median_of_episode_median_ms": 0.011354262824170291,
+    "mean_of_episode_p95_ms": 0.017745750374160707,
+    "mean_decisions_per_episode": 15.92
+  },
+  "rh_rk": {
+    "median_of_episode_median_ms": 13.466687974869274,
+    "mean_of_episode_p95_ms": 16.352636202587746,
+    "mean_decisions_per_episode": 15.88
+  },
+  "ppo": {
+    "median_of_episode_median_ms": 0.10790624946821481,
+    "mean_of_episode_p95_ms": 0.12075623613782227,
+    "mean_decisions_per_episode": 15.72
+  },
+  "ppo_entity": {
+    "median_of_episode_median_ms": 0.18970799283124506,
+    "mean_of_episode_p95_ms": 0.19505755935097113,
+    "mean_decisions_per_episode": 15.84
+  },
+  "ppo_attention": {
+    "median_of_episode_median_ms": 0.3079894813708961,
+    "mean_of_episode_p95_ms": 0.315321939997375,
+    "mean_decisions_per_episode": 15.84
+  },
+  "ppo_entity_lookahead": {
+    "median_of_episode_median_ms": 4.584187758155167,
+    "mean_of_episode_p95_ms": 10.015667382162064,
+    "mean_decisions_per_episode": 15.78
+  }
+}

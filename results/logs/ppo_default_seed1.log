@@ -1,3 +1,5 @@
 2026-10-18 15:33:24,891 INFO device request 'cpu' resolved to 'cpu'
 2026-10-18 15:33:28,232 INFO training ppo_default_seed1 on cpu
 results/runs/ppo_default_seed1
+2026-10-18 18:37:53,083 INFO ppo_default_seed1 already completed; skipping (use --force to retrain)
+results/runs/ppo_default_seed1
