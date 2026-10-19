@@ -20,6 +20,7 @@ destroyed retroactively.
 
 from __future__ import annotations
 
+import copy
 import math
 from dataclasses import dataclass, field
 from typing import Any
@@ -203,6 +204,16 @@ class Simulator:
     def eta(self, i: int) -> float:
         """Current sensing capability ηᵢ(t) (Eq. 5)."""
         return sensing_capability(self.uavs[i].sensor_ok, self.weather)
+
+    def clone_without_future(self) -> Simulator:
+        """Independent copy of the current state with all not-yet-occurred events removed.
+
+        Used for decision-time lookahead: the copy knows exactly what the control center knows
+        at time t (the present state and the past) and nothing about future disruptions.
+        """
+        clone = copy.deepcopy(self, memo={id(self.scenario): self.scenario})
+        clone._events = clone._events[: clone._next_event]
+        return clone
 
     def has_pending_events(self) -> bool:
         """Privileged: whether the schedule holds future events. Used only for termination."""

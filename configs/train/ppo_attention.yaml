@@ -1,0 +1,41 @@
+# Improvement 2: entity scorer + 2 Transformer layers over UAV and target tokens
+# (src/uavta/agents/entity_policy.py, AttentionExtractor). Otherwise identical to ppo_entity.yaml
+# except: 1 attention layer, 4 torch threads and 1M steps. Measured on the M3: 2 layers train at
+# 200-320 steps/s (CPU or MPS), 1 layer with 4 threads at ~520 steps/s; 2M steps x 5 seeds would
+# take 9-14 h. The entity policy plateaued at 0.1-0.5M steps, so 1M is ample, and the reduced
+# budget can only disadvantage this variant.
+name: ppo_attention
+seed: 0
+total_timesteps: 1000000
+n_envs: 8
+vec_env: subproc
+device: cpu
+torch_threads: 4
+eval_freq: 100000
+n_validation_scenarios: 100
+env:
+  max_uavs: 6
+  max_targets: 24
+  horizon: 2400.0
+  reward: {w_value: 0.5, w_time: 0.5, w_energy: 0.0}
+  scenario:
+    source: generator
+    generator:
+      n_uavs: [3, 5]
+      n_targets: [8, 18]
+      event_window: 800.0
+      event_rates: {new_target: 3.0, uav_crash: 1.5, sensor_damage: 3.0, weather: 3.0,
+                    target_move: 3.0, value_change: 3.0}
+ppo:
+  learning_rate: 0.0003
+  n_steps: 1024
+  batch_size: 256
+  n_epochs: 10
+  gamma: 0.995
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.01
+  policy: attention
+  attention_layers: 1
+  attention_heads: 4
+  entity_hidden: 128

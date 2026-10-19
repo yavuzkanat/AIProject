@@ -23,6 +23,7 @@ def main() -> None:
     parser.add_argument("--name", default=None)
     parser.add_argument("--out", default="results/runs")
     parser.add_argument("--set", default=None, help="JSON dict merged into the config")
+    parser.add_argument("--force", action="store_true", help="retrain even if the run is complete")
     args = parser.parse_args()
     overrides = json.loads(args.set) if args.set else {}
     if args.seed is not None:
@@ -32,7 +33,7 @@ def main() -> None:
     if args.name is not None:
         overrides["name"] = args.name
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    run_dir = train(load_train_config(args.config, overrides), args.out)
+    run_dir = train(load_train_config(args.config, overrides), args.out, force=args.force)
     print(run_dir)
 
 

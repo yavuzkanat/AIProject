@@ -41,6 +41,7 @@ class ValidationCallback(BaseCallback):
 
     def _on_training_start(self) -> None:
         self.out_dir.mkdir(parents=True, exist_ok=True)
+        self._csv_path.unlink(missing_ok=True)  # never append to a previous run's log
         self._evaluate()
 
     def _on_step(self) -> bool:

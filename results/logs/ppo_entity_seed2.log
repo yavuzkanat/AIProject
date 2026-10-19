@@ -1,3 +1,5 @@
 2026-10-18 16:46:49,072 INFO device request 'cpu' resolved to 'cpu'
 2026-10-18 16:46:51,110 INFO training ppo_entity_seed2 on cpu
 results/runs/ppo_entity_seed2
+2026-10-18 18:37:55,175 INFO ppo_entity_seed2 already completed; skipping (use --force to retrain)
+results/runs/ppo_entity_seed2

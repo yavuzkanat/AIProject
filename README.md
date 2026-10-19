@@ -44,9 +44,14 @@ python scripts/check_env.py              # Gymnasium + SB3 environment checks, o
 # Train (one seed ≈ 10–15 min on an M3 CPU for 2M steps)
 python scripts/train.py --config configs/train/ppo_default.yaml --seed 0
 python scripts/train.py --config configs/train/ppo_entity.yaml  --seed 0
-./scripts/run_ablations.sh               # Phase 11 ablation runs
+./scripts/run_all_training.sh           # every run of the study; safe to re-run after an
+                                         # interruption: finished runs are skipped, partial
+                                         # runs restart cleanly (--force on train.py retrains)
 
-# Live training dashboard (open http://127.0.0.1:8765/ while training runs)
+# Dashboard: http://127.0.0.1:8765/ is the end-user page ("Drone Yarışı": AI vs. the
+# nearest-target rule on 20 scenarios, plain-language narration and results);
+# http://127.0.0.1:8765/panel is the technical panel (all methods, training curves,
+# PPO diagnostics). Link to a moment: /?scenario=paper_S3&t=420
 python scripts/dashboard.py
 
 # Evaluate all runs and baselines on identical scenarios, then analyse

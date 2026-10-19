@@ -36,6 +36,7 @@ def main() -> None:
         spec.ppo_runs = {}
     if args.ppo is not None:
         spec.ppo_runs = {k: v for k, v in spec.ppo_runs.items() if k in set(args.ppo)}
+        spec.lookahead_runs = {k: v for k, v in spec.lookahead_runs.items() if k in set(args.ppo)}
     if args.skip_baselines:
         spec.baselines = []
         for cond in spec.conditions:

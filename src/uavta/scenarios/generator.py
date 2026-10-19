@@ -162,6 +162,35 @@ class ScenarioGenerator:
             events=tuple(events),
         )
 
+    def sample_future_events(
+        self, rng: np.random.Generator, after: float, free_slots: int, prefix: str = "H"
+    ) -> list[Event]:
+        """Draw a hypothetical continuation of the event process after time ``after``.
+
+        Used by decision-time lookahead: the event *statistics* (rates, ranges) are the known
+        model of disruptions; the realized future of the actual episode is never consulted.
+        New targets get ids ``{prefix}1, {prefix}2, …`` and at most ``free_slots`` are kept.
+        """
+        box = np.asarray(self.config.airspace)
+        events = [e for e in self._events(rng, box, max_new=10**6) if e.time > after]
+        out: list[Event] = []
+        n_new = 0
+        for e in events:
+            if isinstance(e, NewTarget):
+                if n_new >= free_slots:
+                    continue
+                n_new += 1
+                spec = TargetSpec(
+                    id=f"{prefix}{n_new}",
+                    value=e.target.value,
+                    observation_time=e.target.observation_time,
+                    position=e.target.position,
+                    initial=False,
+                )
+                e = NewTarget(time=e.time, target=spec)
+            out.append(e)
+        return out
+
     def _value(self, rng: np.random.Generator) -> float:
         lo, hi = self.config.value_range
         dist = self.config.value_distribution

@@ -41,7 +41,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"uavta.visualization" = ["dashboard.html"]
+"uavta.visualization" = ["dashboard.html", "simple.html", "sim_view.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
