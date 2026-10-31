@@ -15,6 +15,7 @@ import numpy as np
 
 from uavta.dynamics.kinematics import distance
 from uavta.dynamics.value import decay_factor
+from uavta.entities.sensors import sensor_index
 from uavta.environment.simulator import Simulator
 from uavta.events.types import EventType
 
@@ -73,8 +74,24 @@ GLOBAL_FEATURE_NAMES: tuple[str, ...] = (
     *(f"last_event_{e.name.lower()}" for e in EventType),
     "time_since_last_event",
 )
+# Appended to every target row only when ``ObservationSpec.extended`` is True (extended
+# environment with urgent targets and sensor requirements, docs/assumptions.md §12). The v1
+# observation is unchanged, so v1 checkpoints keep working.
+EXTRA_TARGET_FEATURE_NAMES: tuple[str, ...] = (
+    "decay_rate",
+    "requires_vl",
+    "requires_ir",
+    "requires_rd",
+    "capable_uav_fraction",
+    "has_deadline",
+    "time_to_deadline",
+    # relative to the decision UAV: (deadline − arrival time) / T_max, clipped to [-1, 1]
+    "deadline_slack",
+)
+DECAY_RATE_REF = 0.02  # 1/s; decay rates are divided by this and clipped to [0, 1]
 UAV_FEATURES = len(UAV_FEATURE_NAMES)
 TARGET_FEATURES = len(TARGET_FEATURE_NAMES)
+EXTENDED_TARGET_FEATURES = TARGET_FEATURES + len(EXTRA_TARGET_FEATURE_NAMES)
 GLOBAL_FEATURES = len(GLOBAL_FEATURE_NAMES)
 
 
@@ -90,6 +107,7 @@ class ObservationSpec:
         speed_ref: Speed scale in m/s.
         observation_time_ref: Observation-time scale in s.
         vulnerability_ref: Vulnerability scale.
+        extended: Append ``EXTRA_TARGET_FEATURE_NAMES`` to every target row.
     """
 
     max_uavs: int
@@ -100,10 +118,19 @@ class ObservationSpec:
     speed_ref: float = 30.0
     observation_time_ref: float = 60.0
     vulnerability_ref: float = 2.0
+    extended: bool = False
+
+    @property
+    def target_features(self) -> int:
+        return EXTENDED_TARGET_FEATURES if self.extended else TARGET_FEATURES
 
     @property
     def size(self) -> int:
-        return self.max_uavs * UAV_FEATURES + self.max_targets * TARGET_FEATURES + GLOBAL_FEATURES
+        return (
+            self.max_uavs * UAV_FEATURES
+            + self.max_targets * self.target_features
+            + GLOBAL_FEATURES
+        )
 
 
 def _clip01(x: float) -> float:
@@ -118,7 +145,7 @@ def build_observation(sim: Simulator, spec: ObservationSpec) -> np.ndarray:
     box = np.asarray(spec.airspace, dtype=np.float64)
     d_max = float(np.linalg.norm(box))
     uav_block = np.zeros((spec.max_uavs, UAV_FEATURES), dtype=np.float64)
-    tgt_block = np.zeros((spec.max_targets, TARGET_FEATURES), dtype=np.float64)
+    tgt_block = np.zeros((spec.max_targets, spec.target_features), dtype=np.float64)
     dec = sim.decision_uav
 
     for i, u in enumerate(sim.uavs):
@@ -139,6 +166,7 @@ def build_observation(sim: Simulator, spec: ObservationSpec) -> np.ndarray:
 
     valid = sim.valid_targets(dec) if dec is not None else None
     others = [i for i, u in enumerate(sim.uavs) if u.is_operational and i != dec]
+    operational = [i for i, u in enumerate(sim.uavs) if u.is_operational]
     for tg in sim.targets:
         row = tgt_block[tg.slot]
         row[0] = 1.0
@@ -146,9 +174,24 @@ def build_observation(sim: Simulator, spec: ObservationSpec) -> np.ndarray:
         row[2] = float(tg.locked_by is not None)
         row[3:6] = tg.position / box
         row[6] = _clip01(tg.value / spec.value_max)
-        row[7] = decay_factor(sim.t, tg.reference_time, sim.scenario.lambda_obse)
+        row[7] = decay_factor(sim.t, tg.reference_time, sim.decay_rate(tg.slot))
         row[8] = _clip01(tg.spec.observation_time / spec.observation_time_ref)
         row[9] = _clip01((sim.t - tg.appear_time) / T)
+        if spec.extended:
+            k = TARGET_FEATURES
+            row[k] = _clip01(sim.decay_rate(tg.slot) / DECAY_RATE_REF)
+            if tg.spec.required_sensor is not None:
+                row[k + 1 + sensor_index(tg.spec.required_sensor)] = 1.0
+            capable = sum(sim.can_sense(j, tg.slot) for j in operational)
+            row[k + 4] = capable / len(operational) if operational else 0.0
+            dl = tg.deadline_time
+            if dl is not None and not tg.completed:
+                row[k + 5] = 1.0
+                row[k + 6] = _clip01((dl - sim.t) / T)
+                if dec is not None:
+                    u = sim.uavs[dec]
+                    arrival = sim.t + distance(u.position, tg.position) / u.spec.speed
+                    row[k + 7] = min(max((dl - arrival) / T, -1.0), 1.0)
         if dec is None or tg.completed:
             continue
         u = sim.uavs[dec]
@@ -163,6 +206,8 @@ def build_observation(sim: Simulator, spec: ObservationSpec) -> np.ndarray:
         for j in others:
             if tg.locked_by is not None and tg.locked_by != j:
                 continue
+            if not sim.can_sense(j, tg.slot):
+                continue  # this UAV could never observe the target
             o = sim.uavs[j]
             arrival = (
                 sim.time_until_free(j) + distance(sim.free_position(j), tg.position) / o.spec.speed

@@ -7,7 +7,7 @@ from uavta.visualization.dashboard import DashboardData, read_csv_rows, split_na
 
 @pytest.fixture
 def data(tmp_path, monkeypatch):
-    monkeypatch.setattr(DashboardData, "_compute_baselines", lambda self: None)
+    monkeypatch.setattr(DashboardData, "_compute_baselines", lambda self, env_id: None)
     run = tmp_path / "runs" / "ppo_entity_seed3"
     run.mkdir(parents=True)
     (run / "config.yaml").write_text("total_timesteps: 1000\nppo: {policy: entity}\n")
@@ -74,7 +74,9 @@ def test_unknown_preset_and_model(data):
 
 def test_results_missing_is_reported(data, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    assert data.results() == {"status": "missing"}
+    assert data.results() == {"status": "missing", "env": "v1"}
+    with pytest.raises(ValueError):
+        data.results("v9")
 
 
 def test_win_counts_by_metric(tmp_path, monkeypatch):
@@ -96,3 +98,58 @@ def test_win_counts_by_metric(tmp_path, monkeypatch):
     assert (j["wins"], j["ties"], j["losses"]) == (1, 0, 2)
     v = DashboardData._win_counts(metric="value_fraction", tie_tol=0.001)
     assert (v["wins"], v["ties"], v["losses"]) == (1, 1, 1)
+
+
+def test_presets_belong_to_an_environment_and_have_no_emoji(data):
+    import re
+
+    from uavta.visualization.dashboard import ENVIRONMENTS
+
+    presets = data.presets()
+    assert {p["env"] for p in presets} == set(ENVIRONMENTS)
+    pictographs = re.compile("[\U0001F000-\U0001FFFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F]")
+    for p in presets:
+        assert "icon" not in p
+        assert not pictographs.search(p["title"] + p["description"])
+
+
+def test_dashboard_page_has_no_emoji_and_no_faq():
+    import re
+    from pathlib import Path
+
+    import uavta.visualization.dashboard as dash
+
+    html = Path(dash.__file__).with_name("dashboard.html").read_text(encoding="utf-8")
+    assert not re.search("[\U0001F000-\U0001FFFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F]", html)
+    assert "Sık sorulan" not in html and "SSS" not in html
+
+
+def test_v2_replay_uses_the_extended_environment(data):
+    rep = data.replay("", "v2_standard", "greedy_nearest")
+    assert rep["env"] == "v2" and len(rep["uavs"]) == 5
+    assert rep["metrics"]["n_critical"] > 0
+    assert any(t["deadline_time"] is not None for t in rep["targets"])
+
+
+def test_v2_scenario_overrides(data):
+    calm = data.replay("", "v2_calm", "greedy_nearest")
+    assert calm["events"] == []
+    crisis = data._scenario("v2_crisis", 0)
+    normal = data._scenario("v2_standard", 0)
+    assert len(crisis.events) > len(normal.events)
+    radar = data._scenario("v2_radar", 0)
+    reqs = [t.required_sensor for t in radar.targets]
+    assert reqs.count("RD") > reqs.count("IR")
+
+
+def test_model_from_other_environment_is_refused(data, tmp_path):
+    from uavta.training.train import load_train_config, train
+
+    cfg = load_train_config(
+        "configs/train/ppo_entity.yaml",
+        {"total_timesteps": 64, "n_envs": 1, "vec_env": "dummy", "eval_freq": 10_000,
+         "n_validation_scenarios": 1, "ppo": {"n_steps": 32, "batch_size": 32, "n_epochs": 1}},
+    )
+    run = train(cfg, tmp_path / "runs")
+    with pytest.raises(ValueError, match="bu ortam için eğitilmedi"):
+        data.replay(run.name, "v2_standard", "final")

@@ -23,6 +23,7 @@ EXTRA = [
     "latency_median_ms",
     "failed_mission",
     "n_invalid_actions",
+    "critical_on_time_rate",
 ]
 H3_MARGIN = 0.05  # J11, fixed before the experiments
 
@@ -40,11 +41,12 @@ def main() -> None:
     hyp: dict[str, object] = {}
 
     main_df = pd.concat([pd.read_csv(p) for p in args.main], ignore_index=True)
+    extra = [m for m in EXTRA if m in main_df.columns]  # older CSVs lack newer metrics
     ppo_methods = [m for m in args.ppo if m in set(main_df["method"])]
     for cond in main_df["condition"].unique():
-        s = method_summary(main_df, cond, METRICS + EXTRA)
+        s = method_summary(main_df, cond, METRICS + extra)
         s.to_csv(out / f"summary_{cond}.csv", index=False)
-        md += [f"## {cond}", "", fmt_summary(s, METRICS), "", fmt_summary(s, EXTRA), ""]
+        md += [f"## {cond}", "", fmt_summary(s, METRICS), "", fmt_summary(s, extra), ""]
 
     # H1, H2: test_id, paired on 500 scenarios; one Holm family per PPO variant.
     pairs = []
@@ -59,8 +61,10 @@ def main() -> None:
         hyp[f"H1_{p}_gt_random"] = bool(
             c.loc["random", "mean_diff"] > 0 and c.loc["random", "p_holm"] < 0.05
         )
-        for g in ("greedy_value_rate", "greedy_nearest"):
-            hyp[f"H2_{p}_ge_{g}"] = {
+        for g in ("greedy_value_rate", "greedy_nearest", "rh_rk"):
+            # RH-RK is not part of H2 (a re-planner, not a greedy rule); same statistics.
+            key = f"CMP_{p}_vs_{g}" if g == "rh_rk" else f"H2_{p}_ge_{g}"
+            hyp[key] = {
                 "mean_diff": float(c.loc[g, "mean_diff"]),
                 "ci": [float(c.loc[g, "ci_low"]), float(c.loc[g, "ci_high"])],
                 "p_holm": float(c.loc[g, "p_holm"]),

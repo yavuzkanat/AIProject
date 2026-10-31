@@ -22,7 +22,7 @@ from uavta.environment.env import EnvConfig, MultiUAVDynamicEnv
 from uavta.evaluation.runner import ScenarioRef, evaluate_policy, seed_refs
 from uavta.scenarios.generator import EventRates, GeneratorConfig
 from uavta.scenarios.loader import load_paper_scenario
-from uavta.utils.config import deep_merge
+from uavta.utils.config import deep_merge, load_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +77,17 @@ class ExperimentSpec(BaseModel):
     lookahead_runs: dict[str, LookaheadSpec] = Field(default_factory=dict)
     model_file: str = "best_model.zip"
     baselines: list[str] = Field(default_factory=lambda: list(BASELINES))
+    # Base environment: the ``env`` section of a training configuration (so that evaluation
+    # always uses the environment the models were trained in), then ``env`` overrides on top.
+    env_from: str | None = None
     env: dict[str, Any] = Field(default_factory=dict)
     conditions: list[Condition]
+
+    def base_env(self) -> dict[str, Any]:
+        base: dict[str, Any] = {}
+        if self.env_from is not None:
+            base = (load_yaml(self.env_from) or {}).get("env") or {}
+        return deep_merge(base, self.env)
 
 
 def condition_env_config(base_env: dict[str, Any], cond: Condition) -> EnvConfig:
@@ -146,7 +155,7 @@ def run_experiment(spec: ExperimentSpec) -> pd.DataFrame:
         logger.info("%s: %d trained seeds", name, len(models))
     frames = []
     for cond in spec.conditions:
-        env = MultiUAVDynamicEnv(condition_env_config(spec.env, cond))
+        env = MultiUAVDynamicEnv(condition_env_config(spec.base_env(), cond))
         refs = condition_refs(cond)
         for name in cond.baselines if cond.baselines is not None else spec.baselines:
             reps = cond.repeats if name in STOCHASTIC_BASELINES else 1

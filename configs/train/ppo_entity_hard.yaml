@@ -1,0 +1,63 @@
+# Extended environment v2 (docs/assumptions.md §12). Entity scorer as in ppo_entity.yaml.
+# Changes against v1 (the paper model):
+#   * priorities: 25 % of targets are CRITICAL (value 150-250, an observation must start within
+#     200-700 s of the target's appearance, otherwise the target is worthless); the others are
+#     routine targets with value 10-40;
+#   * capabilities: 25 % of targets can only be observed with infrared, 25 % only with radar
+#     (radar is carried by type-B UAVs only);
+#   * scale: 4-7 UAVs, 16-28 initial targets, up to 40 targets; new targets twice as frequent
+#     and over a longer window (1200 s); endurance 80 % of the paper's;
+#   * milder uniform discounts (lambda_obse 0.0005 1/s, lambda_risk 0.00005 1/m) so that the
+#     outcome depends more on the allocation decisions than on distance alone;
+#   * re-tasking: when a new target appears or a UAV crashes, every UAV in transit re-decides
+#     (continue, or switch to another valid target); observing UAVs are never interrupted;
+#   * reward = collected value / V_ref (value-only); the score is the collected value fraction.
+name: ppo_entity_hard
+seed: 0
+total_timesteps: 2000000
+n_envs: 8
+vec_env: subproc
+device: cpu
+torch_threads: 1
+eval_freq: 100000
+n_validation_scenarios: 100
+env:
+  max_uavs: 8
+  max_targets: 40
+  horizon: 2400.0
+  extended_features: true
+  retask_on_event: true   # UAVs in transit re-decide when a new target appears or a UAV crashes
+  reward: {w_value: 1.0, w_time: 0.0, w_energy: 0.0}
+  scenario:
+    source: generator
+    generator:
+      n_uavs: [4, 7]
+      n_targets: [16, 28]
+      max_total_targets: 40
+      lambda_obse: 0.0005
+      lambda_risk: 0.00005
+      value_range: [10, 40]
+      critical_fraction: 0.25
+      critical_value_range: [150, 250]
+      critical_deadline_range: [200, 700]
+      critical_late_factor: 0.0
+      sensor_requirements: {none: 0.5, IR: 0.25, RD: 0.25}
+      uav_type_probs: {A: 0.65, B: 0.35}
+      endurance_scale: 0.8
+      event_window: 1200.0
+      event_rates: {new_target: 8.0, uav_crash: 1.5, sensor_damage: 3.0, weather: 3.0,
+                    target_move: 3.0, value_change: 3.0}
+# PPO settings chosen on 40 validation scenarios from two 600k-step pilots (seed 0):
+# (gamma 0.995, n_steps 1024, batch 256, ent 0.01) vs. the values below; the second was equal or
+# better at every validation point (0.369/0.371 vs. 0.367/0.368 at 50k/100k steps).
+ppo:
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 512
+  n_epochs: 10
+  gamma: 0.999
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.005
+  policy: entity
+  entity_hidden: 128

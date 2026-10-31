@@ -53,23 +53,39 @@ class _Problem:
         self.lam_obse, self.lam_risk = lam_obse, lam_risk
 
         self.uav_ids = [k for k, u in enumerate(sim.uavs) if u.is_operational]
-        self.slots = [tg.slot for tg in sim.targets if not tg.completed and tg.locked_by is None]
+        # A UAV re-deciding in transit (retask_on_event) plans from where it is now, and its
+        # own committed target is free to be (re)assigned like any other.
+        dec = sim.decision_uav
+        redecide = dec is not None and sim.uavs[dec].has_task
+        self.slots = [
+            tg.slot
+            for tg in sim.targets
+            if not tg.completed and (tg.locked_by is None or (redecide and tg.locked_by == dec))
+        ]
         S, n = len(self.uav_ids), len(self.slots)
         self.S, self.n = S, n
         tgts = [sim.targets[s] for s in self.slots]
         self.value = [tg.value for tg in tgts]
         self.tobs = [tg.spec.observation_time for tg in tgts]
         self.tref = [tg.reference_time for tg in tgts]
+        self.lam = [sim.decay_rate(s) for s in self.slots]  # per-target decay (extended env)
+        # Critical targets (extended env): value × late_factor if the observation starts late.
+        self.deadline = [tg.deadline_time for tg in tgts]
+        self.late = [tg.spec.late_factor for tg in tgts]
         pos = [tg.position for tg in tgts]
         self.ready, self.energy, self.rate, self.speed = [], [], [], []
         self.surv0, self.eta, self.xi = [], [], []
+        # eta[k][j]: sensing capability of UAV k for target j; capable[k][j] False if the
+        # target requires a sensor UAV k lacks (extended environment). v1: eta[k][j] = ηₖ.
+        self.capable: list[list[bool]] = []
         self.d0: list[list[float]] = []
         for k in self.uav_ids:
             u = sim.uavs[k]
-            busy = sim.time_until_free(k)
-            start = sim.free_position(k)
+            free_now = redecide and k == dec
+            busy = 0.0 if free_now else sim.time_until_free(k)
+            start = u.position if free_now else sim.free_position(k)
             s0 = u.survival
-            if u.status == UAVStatus.TRANSIT and u.task_slot is not None:
+            if not free_now and u.status == UAVStatus.TRANSIT and u.task_slot is not None:
                 rem = distance(u.position, sim.targets[u.task_slot].position)
                 s0 *= segment_survival(rem, u.spec.vulnerability, lam_risk)
             self.ready.append(self.t + busy)
@@ -77,10 +93,15 @@ class _Problem:
             self.rate.append(u.spec.consumption_rate)
             self.speed.append(u.spec.speed)
             self.surv0.append(s0)
-            self.eta.append(sim.eta(k))
+            self.eta.append([sim.eta_for(k, s) for s in self.slots])
+            self.capable.append([sim.can_sense(k, s) for s in self.slots])
             self.xi.append(u.spec.vulnerability)
             self.d0.append([distance(start, p) for p in pos])
         self.dt = [[distance(a, b) for b in pos] for a in pos]
+
+    def _timely(self, j: int, arrival: float) -> float:
+        dl = self.deadline[j]
+        return 1.0 if dl is None or arrival <= dl + 1e-9 else self.late[j]
 
     def decode(self, x: np.ndarray) -> list[list[int]]:
         plan: list[list[int]] = [[] for _ in range(self.S)]
@@ -102,10 +123,12 @@ class _Problem:
                 d = self.d0[k][j] if prev < 0 else self.dt[prev][j]
                 clock += d / self.speed[k]
                 surv *= math.exp(-self.lam_risk * self.xi[k] * d)
-                decay = math.exp(-self.lam_obse * max(clock - self.tref[j], 0.0))
-                collected += self.value[j] * self.eta[k] * surv * decay
+                decay = math.exp(-self.lam[j] * max(clock - self.tref[j], 0.0))
+                collected += self.value[j] * self._timely(j, clock) * self.eta[k][j] * surv * decay
                 clock += self.tobs[j]
                 prev = j
+                if not self.capable[k][j]:
+                    violation += 1.0  # the simulator would never allow this assignment
             makespan = max(makespan, clock)
             g = self.energy[k] - self.rate[k] * (clock - self.ready[k]) - self.reserve
             if seq and g <= 0:
@@ -127,7 +150,8 @@ class _Problem:
         """Nearest UAV per target, within-UAV order by descending V / max(d, 1) (paper §4.3)."""
         plan: list[list[int]] = [[] for _ in range(self.S)]
         for j in range(self.n):
-            k = min(range(self.S), key=lambda k: self.d0[k][j])
+            capable = [k for k in range(self.S) if self.capable[k][j]] or list(range(self.S))
+            k = min(capable, key=lambda k: self.d0[k][j])
             plan[k].append(j)
         for k in range(self.S):
             plan[k].sort(key=lambda j: -self.value[j] / max(self.d0[k][j], 1.0))
@@ -149,6 +173,8 @@ class _Problem:
             k = min(range(self.S), key=lambda k: (clock[k], k))
             best, best_score = -1, -math.inf
             for j in free:
+                if not self.capable[k][j]:
+                    continue
                 d = self.d0[k][j] if last[k] < 0 else self.dt[last[k]][j]
                 dur = d / self.speed[k] + self.tobs[j]
                 if energy[k] - self.rate[k] * dur <= self.reserve:
@@ -156,10 +182,11 @@ class _Problem:
                 arr = clock[k] + d / self.speed[k]
                 val = (
                     self.value[j]
-                    * self.eta[k]
+                    * self.eta[k][j]
                     * surv[k]
                     * math.exp(-self.lam_risk * self.xi[k] * d)
-                    * math.exp(-self.lam_obse * max(arr - self.tref[j], 0.0))
+                    * math.exp(-self.lam[j] * max(arr - self.tref[j], 0.0))
+                    * self._timely(j, arr)
                 )
                 if val / dur > best_score:
                     best, best_score = j, val / dur

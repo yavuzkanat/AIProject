@@ -16,6 +16,7 @@ MAXIMIZE = (
     "collected_value",
     "completion_rate",
     "episode_return",
+    "critical_on_time_rate",
 )
 MINIMIZE = (
     "makespan",

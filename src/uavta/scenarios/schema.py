@@ -39,6 +39,11 @@ class TargetModel(_Strict):
     position: Vec3
     initial: bool = True
     scenarios: list[str] | None = None
+    # Extended environment only (docs/assumptions.md §12); the paper's targets omit them.
+    decay_rate: PositiveFloat | None = None
+    required_sensor: str | None = None
+    deadline: PositiveFloat | None = None
+    late_factor: float = 0.0
 
 
 class _EventModel(_Strict):

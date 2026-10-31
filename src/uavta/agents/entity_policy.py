@@ -34,12 +34,19 @@ def _mlp(sizes: list[int], activation: type[nn.Module] = nn.Tanh) -> nn.Sequenti
 class EntityExtractor(nn.Module):
     """Produces per-action logits (actor latent) and a pooled value latent (critic)."""
 
-    def __init__(self, max_uavs: int, max_targets: int, hidden: int = 128) -> None:
+    def __init__(
+        self,
+        max_uavs: int,
+        max_targets: int,
+        hidden: int = 128,
+        target_features: int = TARGET_FEATURES,
+    ) -> None:
         super().__init__()
         self.max_uavs, self.max_targets = max_uavs, max_targets
+        self.target_features = target_features
         self.uav_enc = _mlp([UAV_FEATURES, hidden, hidden])
         self.ctx = _mlp([2 * hidden + GLOBAL_FEATURES, hidden, hidden])
-        self.tgt_enc = _mlp([TARGET_FEATURES + hidden, hidden, hidden])
+        self.tgt_enc = _mlp([target_features + hidden, hidden, hidden])
         self.tgt_score = nn.Linear(hidden, 1)
         self.wait_score = nn.Linear(hidden, 1)
         self.value_head = _mlp([2 * hidden, hidden, hidden])
@@ -49,9 +56,9 @@ class EntityExtractor(nn.Module):
     def _split(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         b = obs.shape[0]
         nu = self.max_uavs * UAV_FEATURES
-        nt = self.max_targets * TARGET_FEATURES
+        nt = self.max_targets * self.target_features
         uav = obs[:, :nu].reshape(b, self.max_uavs, UAV_FEATURES)
-        tgt = obs[:, nu : nu + nt].reshape(b, self.max_targets, TARGET_FEATURES)
+        tgt = obs[:, nu : nu + nt].reshape(b, self.max_targets, self.target_features)
         return uav, tgt, obs[:, nu + nt :]
 
     def _encode(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -91,9 +98,15 @@ class AttentionExtractor(EntityExtractor):
     """
 
     def __init__(
-        self, max_uavs: int, max_targets: int, hidden: int = 128, layers: int = 2, heads: int = 4
+        self,
+        max_uavs: int,
+        max_targets: int,
+        hidden: int = 128,
+        layers: int = 2,
+        heads: int = 4,
+        target_features: int = TARGET_FEATURES,
     ) -> None:
-        super().__init__(max_uavs, max_targets, hidden)
+        super().__init__(max_uavs, max_targets, hidden, target_features)
         layer = nn.TransformerEncoderLayer(
             d_model=hidden,
             nhead=heads,
@@ -139,9 +152,11 @@ class EntityMaskablePolicy(MaskableActorCriticPolicy):
         entity_hidden: int = 128,
         attention_layers: int = 0,
         attention_heads: int = 4,
+        target_features: int = TARGET_FEATURES,
         **kwargs: Any,
     ) -> None:
         self._entity_cfg = (max_uavs, max_targets, entity_hidden)
+        self._target_features = target_features
         self._attention_cfg = (attention_layers, attention_heads)
         kwargs.setdefault("ortho_init", False)
         super().__init__(*args, **kwargs)
@@ -149,10 +164,11 @@ class EntityMaskablePolicy(MaskableActorCriticPolicy):
     def _build_mlp_extractor(self) -> None:
         max_uavs, max_targets, hidden = self._entity_cfg
         layers, heads = getattr(self, "_attention_cfg", (0, 4))
+        n_feat = getattr(self, "_target_features", TARGET_FEATURES)
         extractor: EntityExtractor = (
-            AttentionExtractor(max_uavs, max_targets, hidden, layers, heads)
+            AttentionExtractor(max_uavs, max_targets, hidden, layers, heads, n_feat)
             if layers > 0
-            else EntityExtractor(max_uavs, max_targets, hidden)
+            else EntityExtractor(max_uavs, max_targets, hidden, n_feat)
         )
         self.mlp_extractor = extractor  # type: ignore[assignment]
 

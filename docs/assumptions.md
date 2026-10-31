@@ -148,3 +148,45 @@ Seed ranges are disjoint: training < 1,000,000 ≤ validation < 2,000,000 ≤ te
 ## 9. Ablations not performed
 
 The following Phase 1 options were **not** run, to stay within the compute budget: reward ablation (iv) "no survival factor in the reward"; voluntary WAIT (J3b); in-transit re-tasking (J2b); preference-conditioned policy (J4b). The code supports J3b (`allow_voluntary_wait`), but no results exist for it.
+
+## 10. Extended environment v2 (added 2026-10-27, not part of the paper)
+
+**Why it exists.** In the paper model (v1) the realized value is dominated by travel time: timeliness
+decay and flight risk both grow with distance, so "fly to the nearest target" is already close to the
+best a dispatcher can do. A decision-sensitivity probe on 30 validation scenarios found that five
+hand-written rules (nearest, value ÷ time, cμ-style urgency, sensor scarcity, best-placed UAV) lie
+within 1–2 % of each other in that regime, also after enlarging teams, spreading start positions and
+adding urgent fast-decaying targets. No dispatcher, learned or not, can then be clearly better than the
+nearest-target rule. v2 adds the two things that make allocation decisions matter in a priority-driven
+surveillance mission: **priorities with deadlines** and **sensor capabilities**. v1 is unchanged and
+remains the paper-comparable environment; all v1 results stay valid (every new option defaults to off
+and draws no extra random numbers, which a unit test checks).
+
+| Element | v2 rule | Code |
+|---|---|---|
+| Critical targets | Each target is critical with probability 0.25: value U[150, 250] (routine U[10, 40]); the observation must **start** within U[200, 700] s of the target's appearance, otherwise it is worth `late_factor` = 0 | `TargetSpec.deadline`, `TargetState.timeliness` |
+| Masking | A critical target that the UAV would reach after its deadline is invalid (worthless); a committed task is aborted if an event (target move) makes the deadline unreachable | `Simulator.valid_targets`, `_event_move` |
+| Sensor requirements | 25 % of targets can only be observed with infrared, 25 % only with radar (type B carries radar); a requirement no UAV of the scenario carries is never drawn. Capability for such a target is I_m·ω_m of that sensor only (Eq. 5 with one sensor) | `target_sensing_capability`, `Simulator.eta_for`, `can_sense` |
+| Re-tasking | `retask_on_event`: at the instant a new target appears or a UAV crashes, every UAV **in transit** gets a re-decision (continue = its own target is a valid action, or switch to another valid target, evaluated from its current position); observing UAVs are never interrupted. The pending re-decisions are cleared as soon as time advances. All methods get the same re-decision points and apply their own rule (RH-RK re-plans with the deciding UAV free at its current position). v1 keeps J2a (no re-tasking) | `Simulator.is_retask_decision`, `assign` |
+| Sensor damage | If the damaged sensor is the one a committed target requires, the task is aborted and the target released | `_event_sensor` |
+| Scale | 4–7 UAVs, 16–28 initial targets, up to 40 targets; new targets 8 per 1000 s over a 1200 s window; endurance × 0.8 | `configs/train/ppo_entity_hard.yaml` |
+| Uniform discounts | λ_obse = 0.0005 1/s, λ_risk = 0.00005 1/m (paper: 0.001, 0.0002) | same |
+| Reward / score | collected value / V_ref; the score is the collected value fraction (w_time = 0) | same |
+| Observation | 8 additional features per target slot: decay rate, required sensor (3), fraction of operational UAVs able to observe it, has-deadline, time to deadline, slack of the decision UAV (deadline − arrival); 8 × 21 + 40 × 24 + 17 = 1145 numbers | `EXTRA_TARGET_FEATURE_NAMES` |
+| Per-target decay | `TargetSpec.decay_rate` (generator option `urgent_fraction`) is implemented and tested but **not used** in v2: urgent fast-decaying targets did not make decisions more consequential in the probe | — |
+| Metric | `critical_on_time_rate`: critical targets whose observation started before the deadline ÷ critical targets that appeared | `episode_summary` |
+
+All baselines see the same rules: the greedy rules use the simulator's own value and mask, and RH-RK's
+plan model includes deadlines, per-target capability and per-target decay.
+
+**Re-tasking was added after the first v2 training run** (seeds 0–2, 400k steps) had
+plateaued at the value ÷ time rule's level on validation (35.3–35.6 % vs. 35.5 %); those runs were
+discarded, not reported. With re-tasking the validation probe gave nearest 34.0 %, value ÷ time
+37.8 %, rollout 39.9 % (40 scenarios).
+
+**Design was chosen on validation scenarios only** (seeds 1,000,000+), with the classic rules and a
+rollout policy (each candidate target played out with the value ÷ time rule on an event-free copy) as
+probes, before any v2 test-set evaluation. Headroom found on 40 validation scenarios: nearest 33.2 %,
+value ÷ time 36.3 %, rollout 38.1 % collected value. In v2 the difference to the priority-blind
+nearest rule is therefore expected to be large by construction, and the difference to value-aware
+rules small; both are reported.

@@ -20,6 +20,16 @@
     "supported_superior": false,
     "supported_noninferior": false
   },
+  "CMP_ppo_vs_rh_rk": {
+    "mean_diff": -0.026596968059583986,
+    "ci": [
+      -0.02977887027613924,
+      -0.023455402171865338
+    ],
+    "p_holm": 1.1281751553230631e-41,
+    "supported_superior": false,
+    "supported_noninferior": false
+  },
   "H1_ppo_entity_gt_random": true,
   "H2_ppo_entity_ge_greedy_value_rate": {
     "mean_diff": 0.02150078008931909,
@@ -38,6 +48,16 @@
       0.019061031826163803
     ],
     "p_holm": 1.7984704541318696e-26,
+    "supported_superior": true,
+    "supported_noninferior": true
+  },
+  "CMP_ppo_entity_vs_rh_rk": {
+    "mean_diff": 0.010192368621049669,
+    "ci": [
+      0.007433511415227877,
+      0.013020335007096227
+    ],
+    "p_holm": 4.4539143862212544e-11,
     "supported_superior": true,
     "supported_noninferior": true
   },

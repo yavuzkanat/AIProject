@@ -5,11 +5,15 @@ writes (``results/runs/<run>/{config.yaml, progress.csv, validation.csv, best_mo
 It never writes into run directories and never influences training.
 
 Endpoints:
+    /                               the panel (dashboard.html); /panel is an alias
+    /api/envs                       the two environments (v1 paper model, v2 extended)
     /api/state                      all runs with progress, speed, ETA, status
     /api/run?name=RUN               time series from progress.csv and validation.csv
-    /api/baselines                  baseline metrics on the same validation scenarios
-    /api/replay?name=RUN&scenario=S3&model=best|final|greedy
+    /api/baselines?env=v1|v2        baseline metrics on that environment's validation scenarios
+    /api/presets                    scenario library (each scenario belongs to one environment)
+    /api/replay?name=RUN&scenario=ID&model=best|final|lookahead|<baseline>&seed=N
                                     one recorded episode for the animated map
+    /api/results?env=v1|v2          test-set summary, hypotheses and per-scenario win counts
 """
 
 from __future__ import annotations
@@ -30,9 +34,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-STATIC = Path(__file__).with_name("dashboard.html")  # full panel (simulation + training details)
-SIMPLE_PAGE = Path(__file__).with_name("simple.html")  # end-user page served at "/"
-STATIC_FILES = {"/static/sim_view.js": (Path(__file__).with_name("sim_view.js"), "text/javascript")}
+STATIC = Path(__file__).with_name("dashboard.html")  # the only page: the detailed panel
 ACTIVE_WINDOW_S = 120.0  # a run is "running" if its logs changed this recently
 PROGRESS_KEYS = (
     "time/total_timesteps",
@@ -59,7 +61,6 @@ _ALL_ZERO = {
     "target_move": 0.0,
     "value_change": 0.0,
 }
-# Scenario library of the replay panel. Generated presets are ordinary GeneratorConfig dicts.
 _RATES = {
     "new_target": 3.0,
     "uav_crash": 1.5,
@@ -69,222 +70,316 @@ _RATES = {
     "value_change": 3.0,
 }
 
+# The two environments the dashboard can show. A trained model only runs in the environment it
+# was trained for (the observation layouts differ), so every scenario, model group, baseline
+# cache and result table belongs to exactly one environment.
+ENVIRONMENTS: dict[str, dict[str, Any]] = {
+    "v1": {
+        "id": "v1",
+        "title": "Makale ortamı (v1)",
+        "description": (
+            "Makaledeki model: 3–5 drone, 8–18 hedef, hedeflerin değeri zamanla ve uzun "
+            "uçuşlarda azalır. Skor J = 0,5 × toplanan değer oranı − 0,5 × görev süresi / 2400 s."
+        ),
+        "train_config": "configs/train/ppo_entity.yaml",
+        "ai_group": "ppo_entity",
+        "groups": ["ppo_entity", "ppo_default", "ppo_attention"],
+        "results_dir": "results/tables",
+        "eval_glob": "main_*.csv",
+        "baseline_cache": "validation_baselines_100.json",
+    },
+    "v2": {
+        "id": "v2",
+        "title": "Genişletilmiş ortam (v2)",
+        "description": (
+            "Makale modeline ek olarak: son tarihli kritik hedefler (süresi geçince değersiz), "
+            "yalnızca kızılötesi veya radarla gözlenebilen hedefler, yeni hedef çıktığında "
+            "yoldaki dronelar için yeniden görevlendirme, 4–7 drone, 16–28 hedef, daha kısa pil. "
+            "Skor = toplanan değer oranı."
+        ),
+        "train_config": "configs/train/ppo_entity_hard.yaml",
+        "ai_group": "ppo_entity_hard",
+        "groups": ["ppo_entity_hard"],
+        "results_dir": "results/tables/v2",
+        "eval_glob": "v2_main_*.csv",
+        "baseline_cache": "validation_baselines_v2_100.json",
+    },
+}
 
-def _preset(pid: str, group: str, icon: str, title: str, desc: str, **gen: Any) -> dict[str, Any]:
+
+def env_config(env_id: str) -> Any:
+    """EnvConfig of an environment, read from its training configuration."""
+    from uavta.environment.env import EnvConfig
+
+    if env_id not in ENVIRONMENTS:
+        raise ValueError(f"unknown environment {env_id!r}")
+    cfg = yaml.safe_load(Path(ENVIRONMENTS[env_id]["train_config"]).read_text()) or {}
+    return EnvConfig.model_validate(cfg.get("env") or {})
+
+
+def _preset(pid: str, env: str, group: str, title: str, desc: str, **gen: Any) -> dict[str, Any]:
+    """A generated scenario: ``gen`` overrides the environment's scenario generator."""
     return {
         "id": pid,
+        "env": env,
         "kind": "generated",
         "group": group,
-        "icon": icon,
         "title": title,
         "description": desc,
         "generator": gen,
     }
 
 
-_PAPER = "Makaledeki görevler"
+def _paper(variant: str, title: str, desc: str) -> dict[str, Any]:
+    return {
+        "id": f"paper_{variant}",
+        "env": "v1",
+        "kind": "paper",
+        "variant": variant,
+        "group": "Makaledeki görevler",
+        "title": title,
+        "description": desc,
+    }
+
+
 _EVENTS = "Beklenmedik olaylar"
 _SIZE = "Sürü ve görev büyüklüğü"
-_ENERGY = "Batarya ve öncelik"
+_ENERGY = "Batarya ve değer dağılımı"
+_V2 = "Kritik hedefler ve sensörler"
+_V2_SIZE = "Sürü büyüklüğü ve olaylar"
 
-# Scenario library of the replay panel (20 scenarios). Generated presets are GeneratorConfig
-# dicts; their seeds come from DEMO_SEED_BASE and never overlap the evaluation seeds.
+# Scenario library of the replay panel. Seeds come from DEMO_SEED_BASE and never overlap the
+# training, validation, test or OOD seeds.
 PRESETS: list[dict[str, Any]] = [
-    {
-        "id": "paper_S1",
-        "kind": "paper",
-        "variant": "S1",
-        "group": _PAPER,
-        "icon": "🗺",
-        "title": "Küçük görev",
-        "description": "Makaledeki S1: 3 drone, 10 hedef; 1 drone düşer, 1 yeni hedef çıkar.",
-    },
-    {
-        "id": "paper_S2",
-        "kind": "paper",
-        "variant": "S2",
-        "group": _PAPER,
-        "icon": "🗺",
-        "title": "Orta görev",
-        "description": "Makaledeki S2: 4 drone, 14 hedef; hedef yer değiştirir, sensör bozulur.",
-    },
-    {
-        "id": "paper_S3",
-        "kind": "paper",
-        "variant": "S3",
-        "group": _PAPER,
-        "icon": "🗺",
-        "title": "Zor görev",
-        "description": "Makaledeki S3: 5 drone, 18 hedef; 2 drone düşer, fırtına çıkar.",
-    },
+    _paper("S1", "S1 - küçük", "Makaledeki S1: 3 drone, 10 hedef; 1 drone düşer, 1 yeni hedef çıkar."),
+    _paper(
+        "S2", "S2 - orta", "Makaledeki S2: 4 drone, 14 hedef; hedef yer değiştirir, sensör bozulur."
+    ),
+    _paper("S3", "S3 - büyük", "Makaledeki S3: 5 drone, 18 hedef; 2 drone düşer, hava bozulur."),
     _preset(
         "calm",
+        "v1",
         _EVENTS,
-        "🌤",
-        "Sakin gün",
-        "Hiç sürpriz yok; sadece hedeflerin akıllı sırayla gezilmesi önemli.",
+        "Olaysız",
+        "Hiç olay yok; yalnızca hedeflerin sırası önemli.",
         n_uavs=[4, 4],
         n_targets=[12, 12],
         event_rates=_ALL_ZERO,
     ),
     _preset(
         "crisis",
+        "v1",
         _EVENTS,
-        "🚨",
-        "Kriz günü",
-        "Her şey ters gidiyor: kayıplar, yeni hedefler, kötü hava, hepsi sık sık.",
+        "Yoğun olay",
+        "Bütün olay türleri normalin 3 katı sıklıkta.",
         n_uavs=[5, 5],
         n_targets=[14, 14],
         event_rates={k: 3 * v for k, v in _RATES.items()},
     ),
     _preset(
         "losses",
+        "v1",
         _EVENTS,
-        "💥",
         "Drone kayıpları",
-        "Dronelar art arda düşer; kalanlar boşalan işleri devralmalı.",
+        "Dronelar art arda düşer; kalanlar boşalan işleri devralır.",
         n_uavs=[5, 5],
         n_targets=[14, 14],
         event_rates={**_ALL_ZERO, "uav_crash": 5.0},
     ),
     _preset(
         "storm",
+        "v1",
         _EVENTS,
-        "⛈",
-        "Fırtına",
+        "Kötü hava ve arıza",
         "Hava bozulur, sensörler arızalanır; gözlem kalitesi düşer.",
         n_uavs=[4, 4],
         n_targets=[12, 12],
         event_rates={**_ALL_ZERO, "weather": 8.0, "sensor_damage": 8.0},
     ),
     _preset(
-        "fog",
-        _EVENTS,
-        "🌫",
-        "Sisli sabah",
-        "Görevin hemen başında sis çöker; kameralar baştan zayıf görür.",
-        n_uavs=[4, 4],
-        n_targets=[12, 12],
-        event_window=150.0,
-        event_rates={**_ALL_ZERO, "weather": 20.0},
-    ),
-    _preset(
         "moving",
+        "v1",
         _EVENTS,
-        "🏃",
         "Hareketli hedefler",
-        "Hedefler yer değiştirir, yenileri çıkar; rotalar sürekli değişir.",
+        "Hedefler yer değiştirir, yenileri çıkar.",
         n_uavs=[4, 4],
         n_targets=[10, 10],
         event_rates={**_ALL_ZERO, "target_move": 10.0, "new_target": 6.0},
     ),
     _preset(
         "surge",
+        "v1",
         _EVENTS,
-        "📍",
-        "Hedef yağmuru",
-        "Az hedefle başlar, görev boyunca birçok yeni hedef ortaya çıkar.",
+        "Sonradan çıkan hedefler",
+        "6 hedefle başlar; görev boyunca çok sayıda yeni hedef çıkar.",
         n_uavs=[4, 4],
         n_targets=[6, 6],
         event_rates={**_ALL_ZERO, "new_target": 15.0},
     ),
     _preset(
         "value_drop",
+        "v1",
         _EVENTS,
-        "📉",
-        "Önemini yitiren hedefler",
-        "Bazı hedeflerin önemi görev sırasında azalır; öncelik sırası değişir.",
+        "Değeri düşen hedefler",
+        "Bazı hedeflerin değeri görev sırasında azalır.",
         n_uavs=[4, 4],
         n_targets=[14, 14],
         event_rates={**_ALL_ZERO, "value_change": 15.0},
     ),
     _preset(
         "small_team",
+        "v1",
         _SIZE,
-        "👥",
-        "Küçük ekip",
-        "Sadece 2 drone ile 8 hedef: her karar daha önemli.",
+        "2 drone, 8 hedef",
+        "Eğitimdekinden küçük ekip.",
         n_uavs=[2, 2],
         n_targets=[8, 8],
     ),
     _preset(
         "large",
+        "v1",
         _SIZE,
-        "🐝",
-        "Büyük sürü",
-        "6 drone ve 20 hedef: eğitimde görülenden daha büyük bir görev.",
+        "6 drone, 20 hedef",
+        "Eğitimdekinden büyük görev.",
         n_uavs=[6, 6],
         n_targets=[20, 20],
     ),
     _preset(
         "many_targets",
+        "v1",
         _SIZE,
-        "🎯",
-        "Kalabalık hedef",
-        "4 drone, 22 hedef: işi dengeli paylaştırmak gerekir.",
+        "4 drone, 22 hedef",
+        "Hedef sayısı fazla; işi dengeli paylaştırmak gerekir.",
         n_uavs=[4, 4],
         n_targets=[22, 22],
     ),
     _preset(
         "single_type",
+        "v1",
         _SIZE,
-        "✈",
         "Tek tip drone",
-        "Bütün dronelar aynı (daha kısa pilli, 2 sensörlü) tipte.",
+        "Bütün dronelar A tipi (1800 s pil, kamera + kızılötesi).",
         n_uavs=[4, 4],
         n_targets=[12, 12],
         uav_type_probs={"A": 1.0},
     ),
     _preset(
         "low_battery",
+        "v1",
         _ENERGY,
-        "🪫",
-        "Zayıf batarya",
-        "Piller normalin %60'ı: her hedefe yetişmek mümkün olmayabilir.",
+        "Pil %60",
+        "Pil süresi normalin %60'ı; her hedefe yetişilemeyebilir.",
         n_uavs=[4, 4],
         n_targets=[14, 14],
         endurance_scale=0.6,
     ),
     _preset(
         "long_range",
+        "v1",
         _ENERGY,
-        "🔋",
-        "Güçlü batarya",
-        "Piller normalin 1,5 katı: enerji sorun değil, sıralama önemli.",
+        "Pil %150",
+        "Pil sorun değil; yalnızca sıralama önemli.",
         n_uavs=[4, 4],
         n_targets=[14, 14],
         endurance_scale=1.5,
     ),
     _preset(
         "vip",
+        "v1",
         _ENERGY,
-        "💎",
-        "Birkaç çok önemli hedef",
-        "Hedeflerin çoğu sıradan, birkaçı çok değerli: onları kaçırmamak gerek.",
+        "Birkaç çok değerli hedef",
+        "Hedeflerin çoğu düşük değerli, birkaçı çok değerli.",
         n_uavs=[4, 4],
         n_targets=[14, 14],
         value_distribution="skewed",
     ),
     _preset(
-        "extremes",
-        _ENERGY,
-        "⚖",
-        "Ya çok önemli ya önemsiz",
-        "Hedefler iki uçta: ya çok değerli ya da çok az değerli.",
-        n_uavs=[4, 4],
-        n_targets=[14, 14],
-        value_distribution="bimodal",
-    ),
-    _preset(
         "hard",
+        "v1",
         _ENERGY,
-        "🔥",
-        "En zor mod",
-        "Olaylar iki kat sık, piller %70: her şey bir arada.",
+        "Zor karışım",
+        "Olaylar iki kat sık, pil %70.",
         n_uavs=[5, 5],
         n_targets=[16, 16],
         endurance_scale=0.7,
         event_rates={k: 2 * v for k, v in _RATES.items()},
+    ),
+    _preset(
+        "v2_standard",
+        "v2",
+        _V2,
+        "Standart",
+        "Eğitim dağılımından bir görev: 5 drone, 22 hedef.",
+        n_uavs=[5, 5],
+        n_targets=[22, 22],
+    ),
+    _preset(
+        "v2_many_critical",
+        "v2",
+        _V2,
+        "Kritik hedef çok",
+        "Hedeflerin yarısı son tarihli kritik hedef.",
+        n_uavs=[5, 5],
+        n_targets=[22, 22],
+        critical_fraction=0.5,
+    ),
+    _preset(
+        "v2_tight",
+        "v2",
+        _V2,
+        "Sıkı son tarih",
+        "Kritik hedeflerin süresi 150–400 s; geç kalınan hedef değersizleşir.",
+        n_uavs=[5, 5],
+        n_targets=[22, 22],
+        critical_deadline_range=[150.0, 400.0],
+    ),
+    _preset(
+        "v2_radar",
+        "v2",
+        _V2,
+        "Radar gerektiren hedef çok",
+        "Hedeflerin yarısını yalnızca radarlı (B tipi) dronelar gözleyebilir.",
+        n_uavs=[5, 5],
+        n_targets=[22, 22],
+        sensor_requirements={"none": 0.3, "IR": 0.2, "RD": 0.5},
+    ),
+    _preset(
+        "v2_small",
+        "v2",
+        _V2_SIZE,
+        "4 drone, 16 hedef",
+        "Eğitim dağılımının alt ucu.",
+        n_uavs=[4, 4],
+        n_targets=[16, 16],
+    ),
+    _preset(
+        "v2_large",
+        "v2",
+        _V2_SIZE,
+        "7 drone, 28 hedef",
+        "Eğitim dağılımının üst ucu.",
+        n_uavs=[7, 7],
+        n_targets=[28, 28],
+    ),
+    _preset(
+        "v2_calm",
+        "v2",
+        _V2_SIZE,
+        "Olaysız",
+        "Hiç olay yok; yalnızca son tarihler ve sensör gereksinimleri.",
+        n_uavs=[5, 5],
+        n_targets=[22, 22],
+        event_rates=_ALL_ZERO,
+    ),
+    _preset(
+        "v2_crisis",
+        "v2",
+        _V2_SIZE,
+        "Yoğun olay",
+        "Bütün olay türleri normalin 2 katı sıklıkta.",
+        n_uavs=[5, 5],
+        n_targets=[22, 22],
+        event_rate_scale=2.0,
     ),
 ]
 
@@ -327,10 +422,10 @@ class DashboardData:
         self.runs_dir = runs_dir
         self.cache_dir = cache_dir
         self.n_validation = n_validation
-        self._baselines: dict[str, Any] = {"status": "pending"}
+        self._baselines: dict[str, dict[str, Any]] = {}
         self._replays: dict[tuple[str, str, str, float, int], dict[str, Any]] = {}
         self._lock = threading.Lock()
-        threading.Thread(target=self._compute_baselines, daemon=True).start()
+        self._compute_baselines("v1")
 
     # ---------------------------------------------------------------- runs
 
@@ -420,60 +515,94 @@ class DashboardData:
 
     # ---------------------------------------------------------------- baselines
 
-    def baselines(self) -> dict[str, Any]:
+    def baselines(self, env_id: str = "v1") -> dict[str, Any]:
+        """Classic methods on the validation scenarios of ``env_id`` (computed once, cached)."""
+        if env_id not in ENVIRONMENTS:
+            raise ValueError(f"unknown environment {env_id!r}")
         with self._lock:
-            return dict(self._baselines)
-
-    def _compute_baselines(self) -> None:
-        """Baselines on the exact validation scenarios used by the training callback."""
-        cache = self.cache_dir / f"validation_baselines_{self.n_validation}.json"
-        if cache.exists():
+            current = self._baselines.get(env_id)
+        if current is None:
+            self._compute_baselines(env_id)
             with self._lock:
-                self._baselines = json.loads(cache.read_text())
-            return
+                current = self._baselines.get(env_id, {"status": "pending"})
+        return dict(current)
+
+    def _compute_baselines(self, env_id: str) -> None:
+        """Start the baseline computation for ``env_id`` in a background thread (or load it)."""
+        cache = self.cache_dir / ENVIRONMENTS[env_id]["baseline_cache"]
+        with self._lock:
+            if env_id in self._baselines:
+                return
+            if cache.exists():
+                self._baselines[env_id] = json.loads(cache.read_text())
+                return
+            self._baselines[env_id] = {"status": "pending"}
+        threading.Thread(target=self._baseline_worker, args=(env_id, cache), daemon=True).start()
+
+    def _baseline_worker(self, env_id: str, cache: Path) -> None:
+        """Baselines on the exact validation scenarios used by the training callback."""
         try:
             from uavta.environment.env import MultiUAVDynamicEnv
             from uavta.evaluation.experiments import BASELINES
             from uavta.evaluation.runner import evaluate_policy, seed_refs
             from uavta.scenarios.generator import VALIDATION_SEED_BASE
 
-            env = MultiUAVDynamicEnv()
+            env = MultiUAVDynamicEnv(env_config(env_id))
             refs = seed_refs(VALIDATION_SEED_BASE, self.n_validation, "val")
             result: dict[str, Any] = {"status": "computing", "methods": {}}
             for name in ("greedy_nearest", "greedy_value_rate", "random", "rh_rk"):
                 df = evaluate_policy(env, BASELINES[name](), refs, method=name)
                 result["methods"][name] = {k: float(df[k].mean()) for k in VALIDATION_KEYS[1:]}
                 with self._lock:
-                    self._baselines = json.loads(json.dumps(result))
+                    self._baselines[env_id] = json.loads(json.dumps(result))
             result["status"] = "ready"
             result["n_scenarios"] = self.n_validation
             self.cache_dir.mkdir(parents=True, exist_ok=True)
             cache.write_text(json.dumps(result, indent=2))
             with self._lock:
-                self._baselines = result
+                self._baselines[env_id] = result
         except Exception as exc:  # noqa: BLE001 - reported to the UI, never crashes the server
             logger.exception("baseline computation failed")
             with self._lock:
-                self._baselines = {"status": "error", "error": str(exc)}
+                self._baselines[env_id] = {"status": "error", "error": str(exc)}
 
     # ---------------------------------------------------------------- scenarios & replay
+
+    @staticmethod
+    def environments() -> list[dict[str, Any]]:
+        keys = ("id", "title", "description", "ai_group", "groups")
+        return [{k: e[k] for k in keys} for e in ENVIRONMENTS.values()]
 
     def presets(self) -> list[dict[str, Any]]:
         return [{k: v for k, v in p.items() if k != "generator"} for p in PRESETS]
 
-    def _scenario(self, preset_id: str, seed: int) -> Any:
-        from uavta.scenarios.generator import GeneratorConfig, ScenarioGenerator
-        from uavta.scenarios.loader import load_paper_scenario
-
+    @staticmethod
+    def _preset(preset_id: str) -> dict[str, Any]:
         if preset_id in ("S1", "S2", "S3"):  # short names used by older clients
             preset_id = f"paper_{preset_id}"
         preset = next((p for p in PRESETS if p["id"] == preset_id), None)
         if preset is None:
             raise ValueError(f"unknown scenario {preset_id!r}")
+        return preset
+
+    def _scenario(self, preset_id: str, seed: int) -> Any:
+        from uavta.scenarios.generator import EventRates, GeneratorConfig, ScenarioGenerator
+        from uavta.scenarios.loader import load_paper_scenario
+        from uavta.utils.config import deep_merge
+
+        preset = self._preset(preset_id)
         if preset["kind"] == "paper":
             return load_paper_scenario(preset["variant"])
-        cfg = GeneratorConfig.model_validate(preset["generator"])
-        return ScenarioGenerator(cfg, name=preset_id).generate(DEMO_SEED_BASE + seed)
+        base = env_config(preset["env"]).scenario.generator.model_dump(mode="json")
+        overrides = dict(preset["generator"])
+        scale = overrides.pop("event_rate_scale", None)
+        gen = deep_merge(base, overrides)
+        if "sensor_requirements" in overrides:  # replace, do not merge, the distribution
+            gen["sensor_requirements"] = overrides["sensor_requirements"]
+        if scale is not None:
+            gen["event_rates"] = EventRates(**gen["event_rates"]).scaled(scale).model_dump()
+        cfg = GeneratorConfig.model_validate(gen)
+        return ScenarioGenerator(cfg, name=preset["id"]).generate(DEMO_SEED_BASE + seed)
 
     def _policy(self, name: str, model: str) -> tuple[Any, str, float]:
         """Return (policy, label, model mtime) for a run checkpoint or a baseline."""
@@ -524,9 +653,19 @@ class DashboardData:
             if key in self._replays:
                 return self._replays[key]
         policy, label, _ = self._policy(name, model)
+        env_id = self._preset(scenario)["env"]
+        env = MultiUAVDynamicEnv(env_config(env_id))
+        model_obj = getattr(policy, "model", None) or getattr(
+            getattr(policy, "base", None), "model", None
+        )
+        if model_obj is not None and model_obj.observation_space.shape != env.observation_space.shape:
+            raise ValueError(
+                f"{name} bu ortam için eğitilmedi: {ENVIRONMENTS[env_id]['title']} görevleri "
+                "yalnızca o ortamda eğitilmiş modellerle oynatılabilir"
+            )
         sc = self._scenario(scenario, seed)
         rec = run_episode(
-            MultiUAVDynamicEnv(),
+            env,
             policy,
             ScenarioRef(scenario, scenario=sc),
             keep_logs=True,
@@ -535,6 +674,7 @@ class DashboardData:
         data = {
             "label": label,
             "model": model,
+            "env": env_id,
             "scenario": scenario,
             "seed": seed,
             "model_saved_at": mtime or None,
@@ -567,6 +707,8 @@ class DashboardData:
                     "appeared_value",
                     "energy_used_total",
                     "n_operational_end",
+                    "n_critical",
+                    "critical_on_time",
                 )
             },
             "activities": [
@@ -599,11 +741,12 @@ class DashboardData:
         condition: str = "test_id",
         metric: str = "weighted_score",
         tie_tol: float = 1e-9,
+        pattern: str = "main_*.csv",
     ) -> dict[str, Any] | None:
         """Per-scenario wins of ``ai`` (mean over seeds) against ``rival`` on ``metric``."""
         evals = Path("results/eval")
         sums: dict[str, dict[str, list[float]]] = {ai: {}, rival: {}}
-        for f in sorted(evals.glob("main_*.csv")):
+        for f in sorted(evals.glob(pattern)):
             for r in read_csv_rows(f):
                 if r.get("condition") != condition or r.get("method") not in sums:
                     continue
@@ -631,12 +774,15 @@ class DashboardData:
             "losses": len(common) - win - tie,
         }
 
-    def results(self) -> dict[str, Any]:
-        """Final test-set summary written by scripts/analyze.py, if available."""
-        tables = Path("results/tables")
+    def results(self, env_id: str = "v1") -> dict[str, Any]:
+        """Final test-set summary of ``env_id`` written by scripts/analyze.py, if available."""
+        if env_id not in ENVIRONMENTS:
+            raise ValueError(f"unknown environment {env_id!r}")
+        env = ENVIRONMENTS[env_id]
+        tables = Path(env["results_dir"])
         summary = tables / "summary_test_id.csv"
         if not summary.exists():
-            return {"status": "missing"}
+            return {"status": "missing", "env": env_id}
         methods = []
         for r in read_csv_rows(summary):
             row: dict[str, Any] = {"method": r["method"], "n_seeds": int(float(r["n_seeds"] or 0))}
@@ -647,6 +793,7 @@ class DashboardData:
                 "completion_rate",
                 "energy_used_total",
                 "risk_exposure",
+                "critical_on_time_rate",
             ):
                 row[k] = _float(r.get(k))
                 row[k + "_spread"] = _float(r.get(k + "_spread"))
@@ -674,20 +821,32 @@ class DashboardData:
                     row[k] = _float(r.get(k))
                     row[k + "_spread"] = _float(r.get(k + "_spread"))
                 methods.append(row)
-        out: dict[str, Any] = {"status": "ready", "methods": methods}
+        out: dict[str, Any] = {
+            "status": "ready",
+            "env": env_id,
+            "ai_method": env["ai_group"],
+            "methods": methods,
+        }
         lat = tables / "latency.json"
         if lat.exists():
             out["latency_ms"] = {
                 k: v["median_of_episode_median_ms"] for k, v in json.loads(lat.read_text()).items()
             }
-        wins = self._win_counts()
+        # Per-scenario wins on collected value, against every classic method; differences below
+        # 0.1 percentage point count as a draw (the same rule the replay verdict uses).
+        wins = {}
+        for rival in ("greedy_nearest", "greedy_value_rate", "rh_rk"):
+            w = self._win_counts(
+                ai=env["ai_group"],
+                rival=rival,
+                metric="value_fraction",
+                tie_tol=0.001,
+                pattern=env["eval_glob"],
+            )
+            if w:
+                wins[rival] = w
         if wins:
-            out["wins"] = wins  # on J (training objective), used by the technical panel
-        # The end-user page judges a mission by collected information only (one visible rule);
-        # differences below 0.1 percentage point count as a draw, as on that page.
-        wins_info = self._win_counts(metric="value_fraction", tie_tol=0.001)
-        if wins_info:
-            out["wins_info"] = wins_info
+            out["wins"] = wins
         hyp = tables / "hypotheses.json"
         if hyp.exists():
             out["hypotheses"] = json.loads(hyp.read_text())
@@ -714,19 +873,16 @@ def make_handler(data: DashboardData) -> type[BaseHTTPRequestHandler]:
             url = urlparse(self.path)
             q = {k: v[0] for k, v in parse_qs(url.query).items()}
             try:
-                if url.path in ("/", "/index.html"):
-                    self._send(200, SIMPLE_PAGE.read_bytes(), "text/html; charset=utf-8")
-                elif url.path in ("/panel", "/panel/"):
+                if url.path in ("/", "/index.html", "/panel", "/panel/"):
                     self._send(200, STATIC.read_bytes(), "text/html; charset=utf-8")
-                elif url.path in STATIC_FILES:
-                    path, ctype = STATIC_FILES[url.path]
-                    self._send(200, path.read_bytes(), ctype + "; charset=utf-8")
+                elif url.path == "/api/envs":
+                    self._json(data.environments())
                 elif url.path == "/api/state":
                     self._json(data.state())
                 elif url.path == "/api/run":
                     self._json(data.run_series(q["name"]))
                 elif url.path == "/api/baselines":
-                    self._json(data.baselines())
+                    self._json(data.baselines(q.get("env", "v1")))
                 elif url.path == "/api/replay":
                     self._json(
                         data.replay(
@@ -739,7 +895,7 @@ def make_handler(data: DashboardData) -> type[BaseHTTPRequestHandler]:
                 elif url.path == "/api/presets":
                     self._json(data.presets())
                 elif url.path == "/api/results":
-                    self._json(data.results())
+                    self._json(data.results(q.get("env", "v1")))
                 else:
                     self._json({"error": "not found"}, HTTPStatus.NOT_FOUND)
             except (KeyError, ValueError) as exc:

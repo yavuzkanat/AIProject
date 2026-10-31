@@ -12,37 +12,37 @@
   --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
   --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
   --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300;
-  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b; --good-text: #006300;
+  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b; --good-text: #006300; --bad-text: #b02a2a;
   --track: #e9e8e3; --cloud: 120,130,150; --accent-wash: rgba(42,120,214,0.08);
   --ai: #2a78d6; --rule: #eb6834;
 }
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
-    --text-primary: #f0efec; --text-secondary: #c3c2b7;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #8f8d86;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
     --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
-    --good-text: #0ca30c; --track: #2c2c2a; --cloud: 150,160,180; --accent-wash: rgba(57,135,229,0.12);
+    --good-text: #3cc13c; --bad-text: #ef6b6b; --track: #2c2c2a; --cloud: 150,160,180; --accent-wash: rgba(57,135,229,0.12);
     --ai: #3987e5; --rule: #d95926;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232321;
-  --text-primary: #f0efec; --text-secondary: #c3c2b7;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #8f8d86;
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
   --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
-  --good-text: #0ca30c; --track: #2c2c2a; --cloud: 150,160,180; --accent-wash: rgba(57,135,229,0.12);
+  --good-text: #3cc13c; --bad-text: #ef6b6b; --track: #2c2c2a; --cloud: 150,160,180; --accent-wash: rgba(57,135,229,0.12);
   --ai: #3987e5; --rule: #d95926;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--page); color: var(--text-primary); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 12px 24px;
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 24px;
   border-bottom: 1px solid var(--border); background: var(--surface-1); position: sticky; top: 0; z-index: 20; }
-header h1 { font-size: 18px; margin: 0; font-weight: 700; }
-header nav { display: flex; gap: 4px; flex-wrap: wrap; }
-header nav a { color: var(--text-secondary); text-decoration: none; padding: 5px 10px; border-radius: 8px; font-size: 14px; }
+header h1 { font-size: 17px; margin: 0; font-weight: 750; }
+header nav { display: flex; gap: 2px; flex-wrap: wrap; }
+header nav a { color: var(--text-secondary); text-decoration: none; padding: 5px 9px; border-radius: 8px; font-size: 14px; }
 header nav a:hover { background: var(--accent-wash); color: var(--text-primary); }
 header .spacer { flex: 1; }
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
@@ -51,47 +51,47 @@ header .spacer { flex: 1; }
 button, select { font: inherit; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; cursor: pointer; }
 button:hover, select:hover { border-color: var(--axis); }
 button:disabled { opacity: .45; cursor: default; }
-button.primary { background: var(--series-1); color: #fff; border-color: transparent; font-weight: 650; }
-button.big { font-size: 18px; padding: 10px 26px; border-radius: 10px; }
-main { max-width: 1360px; margin: 0 auto; padding: 8px 24px 60px; }
+button.primary { background: var(--series-1); color: #fff; border-color: transparent; font-weight: 650; min-width: 110px; }
+main { max-width: 1360px; margin: 0 auto; padding: 4px 24px 60px; }
 section { margin-top: 30px; scroll-margin-top: 70px; }
-section > h2 { font-size: 22px; margin: 0 0 4px; font-weight: 750; }
-p.lead { margin: 0 0 14px; color: var(--text-secondary); max-width: 900px; font-size: 15.5px; }
+section > h2 { font-size: 21px; margin: 0 0 4px; font-weight: 750; }
+p.lead { margin: 0 0 12px; color: var(--text-secondary); max-width: 980px; font-size: 15px; }
 .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
 .muted { color: var(--muted); }
 .sub { color: var(--text-secondary); font-size: 13.5px; }
-.kbd { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: var(--track); padding: 1px 5px; border-radius: 4px; }
-.warn { color: var(--critical); }
-.step { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%;
-  background: var(--series-1); color: #fff; font-weight: 700; font-size: 14px; margin-right: 8px; }
-.step-title { font-size: 17px; font-weight: 700; margin: 0 0 10px; display: flex; align-items: center; }
-/* simple vs expert */
-.expert-only { display: none !important; }
-body.expert .expert-only { display: block !important; }
-body.expert .expert-only.grid, body.expert .expert-only.tiles, body.expert .expert-only.score { display: grid !important; }
-body.expert .expert-only.inline { display: inline-flex !important; }
-body.expert .simple-only { display: none !important; }
+.warn { color: var(--bad-text); }
+.good-t { color: var(--good-text); }
+.bad-t { color: var(--bad-text); }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; background: var(--track); padding: 1px 5px; border-radius: 4px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* ---------- summary ---------- */
+.env-note { border-left: 4px solid var(--series-1); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.kpi .label { color: var(--text-secondary); font-size: 13.5px; }
+.kpi .value { font-size: 30px; font-weight: 800; line-height: 1.15; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi .note { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+.kpi.hl { border-top: 4px solid var(--ai); }
+.verdict-line { margin-top: 12px; font-size: 15.5px; }
 
 /* ---------- scenarios ---------- */
 .scen-group { margin-bottom: 10px; }
-.scen-group h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.scen-group h4 { margin: 0 0 6px; font-size: 12.5px; color: var(--muted); font-weight: 650; text-transform: uppercase; letter-spacing: .03em; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { border-radius: 999px; padding: 7px 14px; font-size: 14.5px; display: inline-flex; gap: 7px; align-items: center; }
-.chip .ic { font-size: 17px; line-height: 1; }
+.chip { border-radius: 999px; padding: 6px 14px; font-size: 14px; }
 .chip.on { background: var(--series-1); color: #fff; border-color: transparent; font-weight: 650; }
 .scen-desc { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px;
-  background: var(--surface-2); border-radius: 10px; font-size: 15px; }
-.scen-desc .ic { font-size: 24px; }
+  background: var(--surface-2); border-radius: 10px; font-size: 14.5px; }
 
 /* ---------- race board ---------- */
-.race { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; margin: 12px 0; }
-@media (max-width: 800px) { .race { grid-template-columns: 1fr; } }
+.race { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: stretch; margin: 12px 0 8px; }
+@media (max-width: 860px) { .race { grid-template-columns: 1fr; } }
 .team { border-radius: 12px; padding: 12px 16px; background: var(--surface-1); border: 1px solid var(--border); border-top: 5px solid var(--ai); }
 .team.rule { border-top-color: var(--rule); }
 .team .name { font-weight: 750; font-size: 16px; }
 .team .rulename { font-size: 12.5px; color: var(--text-secondary); }
 .team .nums { display: flex; gap: 22px; margin-top: 6px; flex-wrap: wrap; }
-.team .big { font-size: 30px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.team .big { font-size: 27px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .team .lbl { font-size: 12.5px; color: var(--text-secondary); }
 .meter { height: 7px; border-radius: 4px; background: var(--track); overflow: hidden; margin-top: 8px; }
 .meter > span { display: block; height: 100%; border-radius: 4px; }
@@ -101,11 +101,10 @@ body.expert .simple-only { display: none !important; }
 
 /* ---------- maps ---------- */
 .arena { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.arena.single { grid-template-columns: minmax(0, 1fr) 340px; }
+.arena.single { grid-template-columns: minmax(0, 1fr) 360px; }
 @media (max-width: 1000px) { .arena, .arena.single { grid-template-columns: 1fr; } }
 .side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .side-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.side-head .who { font-weight: 750; font-size: 16px; }
 .side-head select { max-width: 100%; }
 .map-wrap { position: relative; }
 .map-wrap canvas { width: 100%; aspect-ratio: 1 / 1; display: block; border-radius: 10px; background: var(--surface-1); border: 1px solid var(--border); }
@@ -113,17 +112,14 @@ body.expert .simple-only { display: none !important; }
 .map-wrap.rule canvas { border-top: 4px solid var(--rule); }
 .toast-stack { position: absolute; left: 10px; right: 10px; top: 12px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
 .toast { background: var(--surface-1); border: 1px solid var(--border); border-left: 4px solid var(--warning);
-  border-radius: 8px; padding: 8px 11px; font-size: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.18); animation: fadein .25s; }
-.toast.crash { border-left-color: var(--critical); }
-.toast.good { border-left-color: var(--good); }
+  border-radius: 8px; padding: 7px 11px; font-size: 13.5px; box-shadow: 0 4px 14px rgba(0,0,0,.18); animation: fadein .25s; }
 @keyframes fadein { from { opacity: 0; transform: translateY(-4px); } }
 .tip { position: fixed; z-index: 50; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 6px 18px rgba(0,0,0,.2); max-width: 270px; display: none; }
-.score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.score .card { padding: 9px 11px; }
+  border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 6px 18px rgba(0,0,0,.2); max-width: 290px; display: none; }
+.score { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.score .card { padding: 8px 11px; }
 .score .label { font-size: 12px; color: var(--text-secondary); }
-.score .value { font-size: 20px; font-weight: 700; margin-top: 1px; }
-.score .note { font-size: 11.5px; color: var(--muted); }
+.score .value { font-size: 19px; font-weight: 700; margin-top: 1px; font-variant-numeric: tabular-nums; }
 .drones { font-size: 13px; }
 .drone-row { display: grid; grid-template-columns: 14px 34px 1fr 74px; gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--grid); }
 .drone-row .sw { width: 12px; height: 12px; border-radius: 3px; }
@@ -133,50 +129,55 @@ body.expert .simple-only { display: none !important; }
 .batt i > s { position: absolute; left: 1px; top: 1px; bottom: 1px; border-radius: 1px; }
 .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .timeline input[type=range] { width: 100%; }
-.ticks { position: relative; height: 24px; }
-.ticks button { position: absolute; top: 0; transform: translateX(-50%); border: 0; background: transparent; padding: 0 2px; font-size: 15px; cursor: pointer; }
+.ticks { position: relative; height: 18px; }
+.ticks button { position: absolute; top: 2px; transform: translateX(-50%); border: 0; padding: 0; width: 6px; height: 14px; border-radius: 2px; cursor: pointer; }
 .narr h3 { font-size: 14px; margin: 0 0 6px; }
 .narr .now { font-size: 14px; margin-bottom: 8px; }
-.narr ul { margin: 0; padding-left: 18px; max-height: 190px; overflow-y: auto; font-size: 13px; color: var(--text-secondary); }
+.narr ul { margin: 0; padding-left: 18px; max-height: 260px; overflow-y: auto; font-size: 13px; color: var(--text-secondary); }
 .narr li.fresh { color: var(--text-primary); }
-.legend-line { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--text-secondary); margin-top: 10px; align-items: center; }
-.legend-line .dotk { display: inline-block; width: 13px; height: 13px; border-radius: 50%; vertical-align: -2px; margin-right: 5px; }
-.verdict { margin-top: 14px; border-left: 5px solid var(--series-1); font-size: 16px; }
-.verdict h3 { margin: 0 0 6px; font-size: 20px; }
-.howto { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
-.howto div { font-size: 14px; color: var(--text-secondary); }
-.howto b { color: var(--text-primary); display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--text-secondary); margin-top: 10px; align-items: center; }
+.legend .k { display: inline-flex; align-items: center; gap: 6px; }
+.sym { display: inline-block; width: 14px; height: 14px; flex: none; }
+.sym.drone { background: var(--series-1); clip-path: polygon(50% 0, 100% 100%, 50% 72%, 0 100%); }
+.sym.tgt { border-radius: 50%; border: 2px solid var(--text-primary); background: var(--surface-1); }
+.sym.crit { transform: rotate(45deg) scale(.8); border: 2.5px solid var(--critical); background: var(--surface-1); }
+.sym.done { border-radius: 50%; background: var(--good); }
+.sym.expired { border-radius: 50%; background: var(--track); border: 2px dashed var(--muted); }
+.sym.lost { position: relative; }
+.sym.lost::before, .sym.lost::after { content: ""; position: absolute; left: 6px; top: -1px; width: 3px; height: 16px; background: var(--critical); }
+.sym.lost::before { transform: rotate(45deg); } .sym.lost::after { transform: rotate(-45deg); }
+.sym.cloud { border-radius: 3px; background: rgba(var(--cloud), .35); }
+.letter { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; font-size: 11px; font-weight: 800; background: var(--text-primary); color: var(--surface-1); }
+.evdot { display: inline-block; width: 6px; height: 13px; border-radius: 2px; }
+.verdict { margin-top: 14px; border-left: 5px solid var(--series-1); font-size: 15.5px; }
+.verdict h3 { margin: 0 0 6px; font-size: 19px; }
 
 /* ---------- results ---------- */
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-.tile .label { color: var(--text-secondary); font-size: 13.5px; }
-.tile .value { font-size: 28px; font-weight: 800; margin-top: 2px; }
-.tile .note { color: var(--muted); font-size: 13px; margin-top: 2px; }
-.bigtile { display: flex; gap: 14px; align-items: flex-start; }
-.bigtile .ic { font-size: 30px; line-height: 1; }
-.bigtile .v { font-size: 26px; font-weight: 800; }
-.bigtile .t { color: var(--text-secondary); font-size: 14px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 14px; }
 .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
-.chart-card h3 { font-size: 16px; margin: 0; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 520px) { .grid, .grid3 { grid-template-columns: 1fr; } }
+.chart-card h3 { font-size: 15.5px; margin: 0; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .chart-card .dir { color: var(--muted); font-weight: 500; font-size: 13px; }
 .chart-card .explain { color: var(--text-secondary); font-size: 13.5px; margin: 4px 0 8px; }
-.chart-card .insight { background: var(--surface-2); border-radius: 8px; padding: 9px 12px; font-size: 15px; margin-top: 8px; }
-.chart-box { position: relative; height: 260px; }
-.chart-box.short { height: 170px; }
+.chart-card .insight { background: var(--surface-2); border-radius: 8px; padding: 9px 12px; font-size: 14.5px; margin-top: 8px; }
+.chart-box { position: relative; height: 250px; }
 .chart-box.tall { height: 300px; }
 .claims { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .claims li { display: flex; gap: 10px; align-items: flex-start; }
-.claims .mark { font-weight: 800; min-width: 18px; }
-.claims .ok { color: var(--good-text); }
-.claims .no { color: var(--critical); }
+.badge { font-size: 12px; font-weight: 750; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.badge.ok { background: rgba(12,163,12,.13); color: var(--good-text); }
+.badge.no { background: rgba(208,59,59,.13); color: var(--bad-text); }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
 th { color: var(--text-secondary); font-weight: 600; font-size: 12.5px; }
+td.num, th.num { text-align: right; }
+tr.ai-row td { background: var(--accent-wash); font-weight: 650; }
 .table-wrap { overflow-x: auto; }
+.defs td { white-space: normal; vertical-align: top; }
+.defs td:first-child { font-weight: 650; width: 230px; }
 tbody.runs tr { cursor: pointer; }
 tbody.runs tr:hover, tbody.runs tr.selected { background: var(--accent-wash); }
-.bar { width: 130px; height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; display: inline-block; vertical-align: middle; }
+.bar { width: 120px; height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; display: inline-block; vertical-align: middle; }
 .bar > span { display: block; height: 100%; background: var(--series-1); border-radius: 4px; }
 .status { display: inline-flex; align-items: center; gap: 6px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -185,291 +186,150 @@ tbody.runs tr:hover, tbody.runs tr.selected { background: var(--accent-wash); }
 .status.stopped .dot { background: var(--warning); }
 @keyframes pulse { 50% { opacity: .35; } }
 .swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 6px; }
-.empty { color: var(--muted); padding: 24px 0; text-align: center; }
-details { margin-top: 8px; }
-summary { cursor: pointer; color: var(--text-secondary); font-size: 14px; }
-
-/* ---------- help ---------- */
-.help details { border: 1px solid var(--border); border-radius: 10px; background: var(--surface-1); padding: 0; margin: 0 0 8px; }
-.help summary { padding: 12px 16px; font-size: 15.5px; font-weight: 650; color: var(--text-primary); list-style: none; display: flex; gap: 10px; align-items: center; }
-.help summary::-webkit-details-marker { display: none; }
-.help summary::before { content: "＋"; color: var(--series-1); font-weight: 800; width: 16px; }
-.help details[open] summary::before { content: "－"; }
-.help .body { padding: 0 16px 14px 42px; color: var(--text-secondary); font-size: 14.5px; }
-.help .body p { margin: 0 0 8px; }
-.help .body ul, .help .body ol { margin: 0 0 8px; padding-left: 20px; }
-.help .body li { margin-bottom: 4px; }
-.help .body b { color: var(--text-primary); }
-.help .body table { margin: 6px 0 10px; }
-.help .body td, .help .body th { white-space: normal; vertical-align: top; }
-.help .body code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; background: var(--track); padding: 1px 5px; border-radius: 4px; }
-.help .sym { display: inline-block; width: 22px; text-align: center; }
-.help-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 0 14px; }
-.helpbtn { font-weight: 700; }
+.empty { color: var(--muted); padding: 20px 0; text-align: center; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.tile .label { color: var(--text-secondary); font-size: 13px; }
+.tile .value { font-size: 24px; font-weight: 800; margin-top: 2px; }
+.tile .note { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 </style>
 </head>
 <body>
 <header>
-  <a href="/" style="text-decoration:none;font-size:14px">← Son kullanıcı sayfası</a>
-  <h1>🛰 Drone Sürüsü Paneli</h1>
+  <h1>Drone Sürüsü Görev Dağıtımı</h1>
   <nav>
+    <a href="#summary">Özet</a>
     <a href="#sim">Simülasyon</a>
-    <a href="#results">Sonuçlar</a>
+    <a href="#results">Test sonuçları</a>
     <a href="#learning">Öğrenme</a>
-    <a href="#help">Yardım</a>
-    <a href="#expert" class="expert-only inline">Eğitim ayrıntıları</a>
+    <a href="#runs">Eğitim koşuları</a>
+    <a href="#defs">Tanımlar</a>
   </nav>
   <div class="spacer"></div>
-  <span id="updated" class="sub expert-only inline">bağlanıyor…</span>
-  <div class="seg" role="group" aria-label="Görünüm">
-    <button id="viewSimple" class="on">Basit</button>
-    <button id="viewExpert">Uzman</button>
-  </div>
-  <a href="#help"><button class="helpbtn" title="Yardım">❓ Yardım</button></a>
-  <button id="themeBtn" title="Açık / koyu tema">◐</button>
+  <span class="sub">Ortam:</span>
+  <div class="seg" role="group" aria-label="Ortam" id="envSeg"></div>
+  <span id="updated" class="sub">bağlanıyor…</span>
+  <button id="themeBtn" title="Açık / koyu tema">Tema</button>
 </header>
 <main>
 
+<!-- =============================== SUMMARY =============================== -->
+<section id="summary">
+  <h2>Özet</h2>
+  <p class="lead">Birkaç drone, haritadaki hedefleri gözlemekle görevli. Bir drone işini bitirdiğinde hangi hedefe gideceğine bir
+    <b>karar verici</b> karar verir. Bu panel, pekiştirmeli öğrenmeyle (PPO) eğitilmiş yapay zekâyı klasik karar kurallarıyla
+    aynı görevlerde karşılaştırır. Üstteki <b>Ortam</b> seçimi bütün sayfayı değiştirir.</p>
+  <div class="card env-note" id="envNote"></div>
+  <div id="summaryBody"></div>
+</section>
+
 <!-- =============================== SIMULATION =============================== -->
 <section id="sim">
-  <h2>Drone sürüsünü kim daha iyi yönetir?</h2>
-  <p class="lead">Solda <b style="color:var(--ai)">🤖 yapay zekâ</b>, sağda <b style="color:var(--rule)">📏 klasik bir yöntem</b> aynı görevi aynı anda yönetiyor.
-    Amaç: dronelarla haritadaki hedefleri <b>olabildiğince çabuk</b> gözlemek. Bir görev seçin ve <b>▶ Başlat</b>'a basın.</p>
+  <h2>Simülasyon</h2>
+  <p class="lead">Aynı görev iki karar vericiyle aynı anda oynatılır: solda yapay zekâ, sağda klasik bir yöntem (her iki taraf menüden
+    değiştirilebilir). Görevler eğitimde ve testte kullanılmayan tohumlardan üretilir.</p>
 
   <div class="card">
-    <div class="step-title"><span class="step">1</span>Bir görev seçin</div>
     <div id="scenGroups"></div>
     <div class="scen-desc" id="scenDesc"></div>
   </div>
 
   <div class="card" style="margin-top:12px">
-    <div class="step-title"><span class="step">2</span>Başlatın ve izleyin</div>
     <div class="controls">
-      <button id="playBtn" class="primary big">▶ Başlat</button>
-      <button id="restartBtn">⟲ Baştan</button>
+      <button id="playBtn" class="primary">Başlat</button>
+      <button id="restartBtn">Baştan</button>
+      <span class="sub">Hız</span>
       <div class="seg" role="group" aria-label="Hız" id="speedSeg">
         <button data-speed="20">Yavaş</button><button data-speed="60" class="on">Normal</button><button data-speed="150">Hızlı</button>
       </div>
-      <span class="expert-only inline" style="gap:12px;align-items:center">
-        <span class="seg" role="group" aria-label="Mod"><button id="modeCompare" class="on">2 harita</button><button id="modeSingle">1 harita</button></span>
-        <label class="sub"><input type="checkbox" id="pauseOnEvent" checked> olaylarda duraklat</label>
-        <label class="sub"><input type="checkbox" id="showTrails" checked> geçilen yol</label>
-      </span>
+      <span class="sub">Görünüm</span>
+      <span class="seg" role="group" aria-label="Görünüm"><button id="modeCompare" class="on">2 harita</button><button id="modeSingle">1 harita + olay akışı</button></span>
+      <label class="sub"><input type="checkbox" id="pauseOnEvent" checked> olaylarda kısa duraklat</label>
+      <label class="sub"><input type="checkbox" id="showTrails" checked> uçulan yolu göster</label>
+      <label class="sub"><input type="checkbox" id="showIds" checked> kimlikleri göster</label>
     </div>
     <div class="race" id="race"></div>
     <div class="timeline">
       <input id="tSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="Görev zamanı">
       <div class="ticks" id="eventTicks"></div>
+      <div class="legend" id="tickLegend" style="margin-top:2px"></div>
     </div>
   </div>
 
   <div class="arena" id="arena" style="margin-top:12px"></div>
 
-  <div class="legend-line">
-    <span><span class="dotk" style="background:var(--surface-1);border:2px solid var(--text-primary)"></span>bekleyen hedef (büyük = önemli)</span>
-    <span>▲ drone</span>
-    <span><span class="dotk" style="background:var(--good)"></span>gözlendi ✓</span>
-    <span>✕ düşen drone</span>
-    <span>☁ kötü hava</span>
+  <div class="legend" id="mapLegend">
+    <span class="k"><span class="sym drone"></span>drone (ucu gidiş yönü, altındaki çubuk pil)</span>
+    <span class="k"><span class="sym tgt"></span>bekleyen hedef (büyüklük = değer)</span>
+    <span class="k v2-only"><span class="sym crit"></span>kritik hedef (son tarihli; yanında kalan süre)</span>
+    <span class="k v2-only"><span class="letter">K</span><span class="letter">R</span>yalnızca kızılötesi / radarla gözlenebilir</span>
+    <span class="k"><span class="sym done"></span>gözlendi</span>
+    <span class="k v2-only"><span class="sym expired"></span>son tarihi geçti (değersiz)</span>
+    <span class="k"><span class="sym lost"></span>düşen drone (gri: pili bitti)</span>
+    <span class="k"><span class="sym cloud"></span>kötü hava (sensör verimi düşük)</span>
+    <span class="k">kesik çizgi: atanan rota · noktalı çizgi: hedefin eski yeri</span>
   </div>
-  <details class="card" style="margin-top:10px"><summary>Haritayı nasıl okurum?</summary>
-    <div class="howto">
-      <div><b>▲ Dronelar</b>Sol alttaki üsten kalkar, bir hedefe uçar ve orada kısa bir süre gözlem yapar. Altlarındaki çubuk pil seviyesidir.</div>
-      <div><b>◯ Hedefler</b>Gözlenmesi gereken yerler. Daire ne kadar büyükse hedef o kadar önemlidir. Bir drone'a atanınca o drone'un renginde çerçevelenir, gözlenince yeşil ✓ olur.</div>
-      <div><b>⏳ Neden hız önemli?</b>Hedefe geç gidilirse bilgi eskir; uzun uçuşlar da riski artırır. Bu yüzden hangi hedefe önce gidileceği kararı sonucu değiştirir.</div>
-      <div><b>⚡ Sürprizler</b>Drone düşebilir, hava bozulabilir, yeni hedef çıkabilir. Her sürprizde haritada kısa bir açıklama belirir.</div>
-      <div><b>🤖 Yapay zekâ</b>Binlerce görevi deneme-yanılma ile oynayarak hangi hedefe kimin gideceğini kendi öğrendi.</div>
-      <div><b>📏 Klasik yöntem</b>Sabit bir kural uygular: boşa çıkan drone kendisine en yakın hedefe gider.</div>
-    </div>
-  </details>
   <div id="verdict"></div>
 </section>
 
 <!-- =============================== RESULTS =============================== -->
 <section id="results">
-  <h2>Genel sonuç</h2>
-  <p class="lead">Tek bir görev şansa bağlı olabilir. Bu yüzden iki yöntem, daha önce hiç görülmemiş <b>aynı 500 görevde</b> yarıştırıldı.</p>
-  <div id="resultsBody"><div class="card empty">Sonuçlar henüz hazır değil.</div></div>
+  <h2>Test sonuçları</h2>
+  <p class="lead" id="resultsLead">Tek bir görev şansa bağlı olabilir. Bu yüzden bütün yöntemler, eğitimde hiç kullanılmamış aynı test
+    görevlerinde karşılaştırılır. Yapay zekâ satırı, bağımsız eğitilmiş tohumların ortalamasıdır.</p>
+  <div id="resultsBody"><div class="card empty">Sonuçlar yükleniyor…</div></div>
 </section>
 
 <!-- =============================== LEARNING =============================== -->
 <section id="learning">
-  <h2>Yapay zekâ nasıl öğrendi?</h2>
-  <p class="lead">Yapay zekâ önce rastgele kararlar verdi, sonra her görevden ders çıkararak gelişti. Aşağıdaki çizgi, eğitim ilerledikçe sınav görevlerinde topladığı bilginin nasıl arttığını gösteriyor.</p>
-  <div class="card chart-card simple-only">
-    <div class="chart-box tall"><canvas id="learnSimple"></canvas></div>
-    <div class="insight" id="learnSimpleInsight">Veriler yükleniyor…</div>
-  </div>
-  <div class="grid expert-only" id="learnCharts"></div>
+  <h2>Öğrenme eğrileri</h2>
+  <p class="lead">Eğitim sırasında her 100 bin adımda bir, model 100 sabit doğrulama görevinde sınanır. Çizgi, tohumların ortalamasıdır;
+    gölge en düşük ve en yüksek tohumu gösterir. Kesik çizgiler aynı doğrulama görevlerindeki klasik yöntemlerdir.</p>
+  <div class="grid" id="learnCharts"></div>
 </section>
 
-
-<!-- =============================== HELP =============================== -->
-<section id="help" class="help">
-  <h2>Yardım</h2>
-
-  <!-- ---------- simple help ---------- -->
-  <div class="simple-only">
-  <p class="lead">Aşağıdaki sorulardan birine tıklayın. Daha teknik açıklamalar için sağ üstten <b>Uzman</b> görünümüne geçin.</p>
-  <div class="help-cols"><div>
-  <details open><summary>Bu sayfa ne gösteriyor?</summary><div class="body">
-    <p>Birkaç drone'dan oluşan bir sürü, haritadaki noktaları (hedefleri) gözlemekle görevli. Bir drone işini bitirince
-      <b>"şimdi hangi hedefe gideyim?"</b> sorusunun cevabı gerekiyor. Bu kararı iki farklı "beyin" veriyor:</p>
-    <ul><li><b style="color:var(--ai)">🤖 Yapay zekâ</b> — bu kararı binlerce deneme yaparak kendi kendine öğrendi.</li>
-      <li><b style="color:var(--rule)">📏 Klasik yöntem</b> — her seferinde aynı basit kuralı uygular: "en yakın hedefe git".</li></ul>
-    <p>İkisi aynı görevi aynı anda yönetir; siz de hangisinin daha iyi iş çıkardığını izlersiniz.</p></div></details>
-
-  <details><summary>Nasıl kullanırım? (3 adım)</summary><div class="body"><ol>
-    <li><b>Bir görev seçin.</b> Örneğin "🗺 Küçük görev" ile başlayın; sonra "💥 Drone kayıpları" ya da "🔥 En zor mod"u deneyin.</li>
-    <li><b>▶ Başlat'a basın.</b> İki harita aynı anda oynar. "Yavaş / Normal / Hızlı" ile hızı ayarlayın.</li>
-    <li><b>Sonucu okuyun.</b> Görev bitince haritaların altında "🏆 Bu görevi … kazandı" kartı çıkar.</li></ol>
-    <p>İpuçları: Kaydırma çubuğunu sürükleyerek istediğiniz ana gidebilirsiniz. Çubuğun altındaki simgeler (⚠ ☁ ＋ …) olaylardır; tıklayınca o ana atlar.
-      Üretilmiş görevlerde <b>🎲 Başka bir harita</b> aynı türde yeni bir harita getirir.</p></div></details>
-
-  <details><summary>Haritadaki işaretler ne anlama geliyor?</summary><div class="body"><table><tbody>
-    <tr><td class="sym">▲</td><td><b>Drone.</b> Ucu gittiği yönü gösterir; her drone'un kendi rengi vardır. Altındaki küçük çubuk <b>pil</b> seviyesidir (yeşil → sarı → kırmızı).</td></tr>
-    <tr><td class="sym">◯</td><td><b>Bekleyen hedef.</b> Daire ne kadar büyükse hedef o kadar önemlidir.</td></tr>
-    <tr><td class="sym" style="color:var(--ai)">◯</td><td><b>Renkli çerçeveli hedef:</b> o renkteki drone buraya uçuyor (kesik çizgi rotayı gösterir).</td></tr>
-    <tr><td class="sym" style="color:var(--good)">●✓</td><td><b>Gözlendi.</b> Bu hedefin işi bitti.</td></tr>
-    <tr><td class="sym" style="color:var(--critical)">✕</td><td><b>Düşen drone</b> (gri ✕: pili bitti). Artık görev yapamaz; işi başkalarına kalır.</td></tr>
-    <tr><td class="sym">⋯</td><td>Noktalı çizgi: hedefin <b>eski yeri</b> — hedef yer değiştirmiş.</td></tr>
-    <tr><td class="sym">☁</td><td><b>Kötü hava.</b> Harita bulutlanır; dronelar daha kötü görür, toplanan bilgi azalır.</td></tr>
-    <tr><td class="sym">🏠</td><td><b>Üs.</b> Dronelar buradan kalkar.</td></tr></tbody></table>
-    <p>Fareyi bir drone'un veya hedefin üzerine getirince ayrıntılar (ne yaptığı, pili, önemi) görünür.</p></div></details>
-
-  <details><summary>Skor tablosundaki sayılar ne demek?</summary><div class="body"><ul>
-    <li><b>Hedef gözlendi (ör. 9 / 19):</b> şu ana kadar gözlenen hedef sayısı / ortaya çıkan hedef sayısı.</li>
-    <li><b>Toplanan bilgi (%):</b> gözlenen hedeflerden elde edilen bilginin, bütün hedeflerin toplam değerine oranı. <b>Asıl başarı ölçüsü budur.</b></li>
-    <li><b>Sağlam drone:</b> düşmemiş ve pili bitmemiş drone sayısı. Görev bitince yerini <b>görevi bitirme süresi</b> alır.</li>
-    <li><b>Önde:</b> şu anda daha fazla bilgi toplamış olan taraf.</li></ul></div></details>
-
-  <details><summary>"Toplanan bilgi" neden hiç %100 olmuyor?</summary><div class="body">
-    <p>Çünkü bir hedeften alınan bilgi üç sebeple azalır:</p>
-    <ul><li><b>Bekledikçe eskir.</b> Geç gidilen hedeften daha az işe yarar bilgi gelir.</li>
-      <li><b>Uzun uçuş risklidir.</b> Bir drone ne kadar çok uçarsa, bilgiyi sağ salim getirme ihtimali o kadar düşer.</li>
-      <li><b>Kötü hava ve bozuk sensör</b> gözlem kalitesini düşürür.</li></ul>
-    <p>Bu yüzden her iki yöntem de genelde %20–%45 arası toplar. Önemli olan, iki yöntem arasındaki farktır.</p></div></details>
-  </div><div>
-
-  <details><summary>Yapay zekâ nasıl öğrendi?</summary><div class="body">
-    <p>Yapay zekâya kural öğretilmedi. Rastgele oluşturulmuş <b>yaklaşık 130 bin görevi</b> oynadı (toplam 2 milyon karar).
-      Her görevin sonunda "ne kadar bilgi topladın, ne kadar sürede bitirdin" diye puanlandı ve iyi sonuç getiren kararları daha sık vermeyi öğrendi.
-      Buna <b>pekiştirmeli öğrenme</b> denir — bir oyunu tekrar tekrar oynayarak ustalaşmaya benzer.</p>
-    <p>Öğrendiğini kanıtlamak için eğitimde <b>hiç görmediği</b> görevlerde sınandı ("Yapay zekâ nasıl öğrendi?" grafiği).</p></div></details>
-
-  <details><summary>Neden bazen klasik yöntem kazanıyor?</summary><div class="body">
-    <p>Yapay zekâ <b>ortalamada</b> daha iyi, ama her görevde değil: 500 sınav görevinin yaklaşık <b>10'da 7'sinde</b> "en yakın hedef" kuralını yendi, kalanlarda yenildi.
-      Bazı görevlerde basit kural şans eseri çok iyi bir sıraya denk gelir. Bu yüzden tek bir göreve bakıp karar vermek yerine
-      <a href="#results">500 görevlik genel sonuca</a> bakmak gerekir.</p></div></details>
-
-  <details><summary>Sonuçlar ne kadar güvenilir?</summary><div class="body"><ul>
-    <li>Karşılaştırma, eğitimde hiç kullanılmamış <b>500 farklı görevde</b> yapıldı.</li>
-    <li>Yapay zekâ <b>5 kez sıfırdan</b> eğitildi; beşi de neredeyse aynı sonucu verdi.</li>
-    <li>Fark küçük ama istatistiksel testlere göre <b>tesadüf değil</b>.</li>
-    <li><b>Önemli:</b> Bunlar bir bilgisayar simülasyonunun sonuçlarıdır. Gerçek dronelarda rüzgâr, engeller, iletişim kopması gibi burada olmayan etkiler vardır.</li></ul></div></details>
-
-  <details><summary>Görev türleri neyi test ediyor?</summary><div class="body"><ul>
-    <li><b>Makaledeki görevler:</b> bu projenin dayandığı bilimsel makaledeki üç senaryonun birebir aynısı.</li>
-    <li><b>Beklenmedik olaylar:</b> drone düşmesi, fırtına, yeni hedefler gibi sürprizlere uyum.</li>
-    <li><b>Sürü ve görev büyüklüğü:</b> az ya da çok drone/hedef olduğunda ne olduğu (bazıları eğitimde görülenden büyüktür).</li>
-    <li><b>Batarya ve öncelik:</b> pil kısıtı ve "hangi hedef daha önemli" sorusu.</li></ul></div></details>
-
-  <details><summary>Ekranda bir şey görünmüyor / takıldı</summary><div class="body"><ul>
-    <li>Harita "hazırlanıyor…" diyorsa birkaç saniye bekleyin; planlayıcı içeren görevler biraz daha uzun sürer.</li>
-    <li>Grafikler görünmüyorsa internet bağlantısını kontrol edin (grafik kütüphanesi internetten yüklenir); simülasyon yine çalışır.</li>
-    <li>Sayfayı yenilemek (⌘R / F5) her şeyi baştan yükler.</li></ul></div></details>
-  </div></div>
-  </div>
-
-  <!-- ---------- expert help ---------- -->
-  <div class="expert-only">
-  <p class="lead">Teknik başvuru. Ayrıntılı tasarım: <code>docs/phase1_design.md</code>, tüm varsayımlar: <code>docs/assumptions.md</code>, sonuçlar: <code>docs/report.md</code>.</p>
-  <div class="help-cols"><div>
-  <details open><summary>Simülasyon modeli (makaleden)</summary><div class="body">
-    <p>Li vd., <i>Drones</i> 2026, 10(6), 467'deki model; olay güdümlü, sürekli zamanlı bir yarı-MDP olarak uygulandı.</p>
-    <ul><li><b>Toplanan değer (Den. 4):</b> V·η·p<sub>surv</sub>·exp(−λ<sub>obse</sub>·Δt); λ<sub>obse</sub> = 0,001 s⁻¹, Δt = varış − ortaya çıkış (J1).</li>
-      <li><b>Algılama (Den. 5):</b> η = 1 − Π(1 − I<sub>m</sub>·ω<sub>m</sub>); ω hava faktörleri, I sağlam sensörler.</li>
-      <li><b>Hayatta kalma (Den. 6–7):</b> uçulan her segment için exp(−λ<sub>risk</sub>·ξ·d), λ<sub>risk</sub> = 0,0002 m⁻¹; görev başından itibaren birikimli (J1).</li>
-      <li><b>Enerji (Den. 11):</b> zaman tabanlı, γ = 1/t<sub>endu</sub>; boşta beklerken de tüketir (J5); fizibilite eylem maskesiyle zorunlu.</li>
-      <li><b>Karar anı:</b> görevi olmayan çalışır bir İHA'nın en az bir geçerli hedefi olduğunda; en küçük indeksli İHA önce karar verir.</li>
-      <li><b>Taahhüt (J2a):</b> yoldaki/gözlemdeki İHA gönüllü olarak yeniden görevlendirilmez; yalnızca olaylar yönlendirir/iptal eder.</li>
-      <li><b>Olaylar:</b> düşme, sensör arızası, hava, hedef taşıma, değer düşüşü, yeni hedef (+ yalnızca kaydedilen tercih değişimi). Aynı anda: tip sırasıyla uygulanır.</li></ul></div></details>
-
-  <details><summary>Ölçütlerin tanımları</summary><div class="body"><table><tbody>
-    <tr><td><b>J (ağırlıklı skor)</b></td><td>0,5·değer oranı − 0,5·makespan/2400 s. Eğitim ve hipotez testlerinin ana ölçütü (↑).</td></tr>
-    <tr><td><b>Değer oranı</b></td><td>Σ toplanan beklenen değer / ortaya çıkan tüm hedeflerin (güncel) değeri (↑). Basit görünümde "toplanan bilgi".</td></tr>
-    <tr><td><b>Makespan</b></td><td>Son gözlemin tamamlandığı an (↓); tamamlanma oranıyla birlikte okunmalı.</td></tr>
-    <tr><td><b>Risk maruziyeti</b></td><td>1 − ortalama birikimli hayatta kalma olasılığı (↓).</td></tr>
-    <tr><td><b>Tepki gecikmesi</b></td><td>Bir olaydan sonraki ilk atamaya kadar geçen simülasyon süresi (↓).</td></tr>
-    <tr><td><b>Karar gecikmesi</b></td><td>Karar başına duvar saati; boş makinede, tek iş parçacığı (↓).</td></tr></tbody></table></div></details>
-
-  <details><summary>Yöntemler</summary><div class="body"><ul>
-    <li><b>Yapay zekâ · hedef-odaklı ağ (ppo_entity):</b> MaskablePPO; her hedef yuvasına aynı küçük ağ + bağlam vektörü → yuva puanları = eylem logit'leri (permütasyona eşdeğişken). Pilot sonrası eklendi (N10, keşifsel).</li>
-    <li><b>Yapay zekâ · düz ağ (ppo):</b> 527 boyutlu gözlem → MLP [256, 256]; önceden kaydedilmiş ana yapılandırma.</li>
-    <li><b>Klasik: en yakın hedef</b> — boşa çıkan İHA'ya en yakın geçerli hedef. Basit görünümdeki karşı taraf budur.</li>
-    <li><b>Klasik: değer ÷ süre</b> — argmax beklenen değer / (uçuş + gözlem süresi).</li>
-    <li><b>Klasik: planlayıcı (RH-RK)</b> — her kararda makalenin random-key kodlaması üzerinde karga arama (40×40), açgözlü planla tohumlanır; MDCSATA <i>değildir</i>.</li>
-    <li>Eylem uzayı Discrete(25) + maske: tamamlanmış, kilitli veya enerjiye yetmeyen hedefler seçilemez; BEKLE yalnızca başka seçenek yoksa.</li></ul></div></details>
-
-  <details><summary>PPO göstergelerini okumak (ve bu eğitimlerdeki değerler)</summary><div class="body"><table><tbody>
-    <tr><td><b>Doğrulama J</b></td><td>100 sabit senaryo, deterministik politika. En iyi kontrol noktası buna göre seçilir (<code>best_model.zip</code>). Entity ≈ 100–500 bin adımda platoya ulaştı; MLP 2M adımda hâlâ yavaş yükseliyordu.</td></tr>
-    <tr><td><b>Entropi kaybı</b></td><td>−entropi; 0'a yaklaşması kararların netleştiğini gösterir. Bu eğitimlerde entity −1,1 → −0,45; çökme yok.</td></tr>
-    <tr><td><b>Açıklanan varyans</b></td><td>Değer ağının getiri tahmini; 1 ideal, &lt;0 kötü. Entity ≈ 0,5, MLP ≈ 0,67 — critic orta düzeyde; iyileştirme alanı.</td></tr>
-    <tr><td><b>Yaklaşık KL / kırpma</b></td><td>Güncelleme büyüklüğü; ~0,01–0,03 / ~0,1–0,3 sağlıklı. Öğrenme oranı doğrusal olarak 0'a indiği için eğitim sonunda ≈ 0 olur (beklenen).</td></tr>
-    <tr><td><b>Ortalama bölüm ödülü</b></td><td>Keşif yapan (stokastik) politikanın eğitim getirisi; doğrulama J ile doğrudan karşılaştırılmaz.</td></tr></tbody></table></div></details>
-  </div><div>
-
-  <details><summary>İstatistik ve veri bölmeleri</summary><div class="body"><ul>
-    <li>Tohum aralıkları ayrık: eğitim &lt; 1.000.000 ≤ doğrulama &lt; 2.000.000 ≤ test &lt; 3.000.000 ≤ OOD; panel senaryoları 5.000.000+.</li>
-    <li>Her PPO grubu 5 tohum; test setinde deterministik değerlendirme; yayılım = tohumlar arası std.</li>
-    <li>Eşleştirilmiş iki yönlü Wilcoxon (senaryo başına ortalamalar), Holm düzeltmesi, rank-biserial r, %95 bootstrap GA.</li>
-    <li>Hipotez sonuçları: <code>results/tables/hypotheses.json</code>; tablolar: <code>results/tables/summary.md</code>.</li></ul></div></details>
-
-  <details><summary>Panelin veri kaynakları ve API</summary><div class="body">
-    <p>Panel salt okunurdur; eğitime müdahale etmez. Sunucu: <code>python scripts/dashboard.py</code> (port 8765).</p><table><tbody>
-    <tr><td><code>/api/state</code></td><td>Koşuların ilerleme/hız/kalan süre bilgisi (<code>results/runs/*/progress.csv</code>, <code>validation.csv</code>); 5 sn'de bir.</td></tr>
-    <tr><td><code>/api/run?name=…</code></td><td>Bir koşunun zaman serileri.</td></tr>
-    <tr><td><code>/api/baselines</code></td><td>Klasik yöntemlerin doğrulama senaryolarındaki değerleri (önbellek: <code>results/eval/validation_baselines_100.json</code>).</td></tr>
-    <tr><td><code>/api/replay?…</code></td><td>Bir görevin kaydı: <code>scenario</code>, <code>seed</code>, <code>model</code> = best | final | greedy_nearest | greedy_value_rate | rh_rk | random, <code>name</code> = koşu.</td></tr>
-    <tr><td><code>/api/presets</code>, <code>/api/results</code></td><td>Görev kütüphanesi ve <code>scripts/analyze.py</code> çıktısı.</td></tr></tbody></table>
-    <p>Bir anı paylaşmak için: <code>/?scenario=paper_S3&amp;t=420&amp;view=expert&amp;mode=single</code>.</p></div></details>
-
-  <details><summary>Komutlar</summary><div class="body"><ul>
-    <li>Tüm eğitimler (kaldığı yerden, tekrar çalıştırılabilir): <code>./scripts/run_all_training.sh</code></li>
-    <li>Tek koşu: <code>python scripts/train.py --config configs/train/ppo_entity.yaml --seed 0</code> (biten koşuyu yeniden eğitmek için <code>--force</code>)</li>
-    <li>Değerlendirme: <code>python scripts/evaluate.py --spec configs/eval/main.yaml</code></li>
-    <li>Analiz ve şekiller: <code>python scripts/analyze.py</code>, <code>python scripts/make_figures.py</code></li>
-    <li>Testler: <code>pytest</code></li></ul></div></details>
-
-  <details><summary>Yeni bir görev türü eklemek</summary><div class="body">
-    <p><code>src/uavta/visualization/dashboard.py</code> içindeki <code>PRESETS</code> listesine bir <code>_preset(...)</code> satırı ekleyin.
-      Parametreler <code>GeneratorConfig</code> alanlarıdır: <code>n_uavs</code>, <code>n_targets</code>, <code>event_rates</code> (1000 s'de olay), <code>event_window</code>,
-      <code>endurance_scale</code>, <code>value_distribution</code> (uniform | bimodal | skewed), <code>uav_type_probs</code>. Sunucuyu yeniden başlatın.</p></div></details>
-
-  <details><summary>Sınırlılıklar</summary><div class="body"><ul>
-    <li>Nokta kütle, düz çizgi uçuş, zaman tabanlı enerji; iletişim, çarpışma, rüzgâr, üsse dönüş yok (makaledeki gibi).</li>
-    <li>Kazanç küçük (ΔJ ≈ +0,010 RH-RK'ye karşı); makale senaryolarından S2/S3'te en iyi klasik yöntemin gerisinde.</li>
-    <li>Entity mimarisi pilot sonrası seçildi → keşifsel sonuç. MDCSATA ile karşılaştırma yapılmadı.</li>
-    <li>Ödül ağırlıkları gerçekleşen davranışı neredeyse değiştirmiyor (zaman bozunumu hızı zaten ödüllendiriyor).</li></ul></div></details>
-  </div></div>
-  </div>
-</section>
-
-<!-- =============================== EXPERT =============================== -->
-<section id="expert" class="expert-only">
-  <h2>Eğitim ayrıntıları</h2>
-  <p class="lead">Her satır bir eğitim koşusudur (bir model × bir rastgele tohum). Satıra tıklayıp ayrıntılarını görün; "Karşılaştır" ile iki koşu daha ekleyin.</p>
+<!-- =============================== RUNS =============================== -->
+<section id="runs">
+  <h2>Eğitim koşuları ve PPO göstergeleri</h2>
+  <p class="lead">Her satır bir eğitim koşusudur (bir model yapılandırması × bir rastgele tohum). Ayrıntılarını görmek için satıra tıklayın;
+    soldaki kutularla en fazla iki koşu daha karşılaştırılabilir.</p>
   <div class="tiles" id="overview"></div>
-  <div class="card table-wrap" style="margin-top:12px"><table>
-    <thead><tr><th>Karşılaştır</th><th>Koşu</th><th>Ağ</th><th>Durum</th><th>İlerleme</th><th>Hız</th><th>Geçen</th><th>Kalan</th><th>En iyi doğrulama J</th></tr></thead>
+  <div class="row" style="margin-top:10px"><label class="sub"><input type="checkbox" id="allRuns"> diğer ortamın koşularını da göster</label></div>
+  <div class="card table-wrap" style="margin-top:8px"><table>
+    <thead><tr><th>Karşılaştır</th><th>Koşu</th><th>Ağ</th><th>Durum</th><th>İlerleme</th><th class="num">Hız</th><th class="num">Geçen</th><th class="num">Kalan</th><th class="num">En iyi doğrulama skoru</th></tr></thead>
     <tbody id="runRows" class="runs"><tr><td colspan="9" class="empty">Koşu bekleniyor…</td></tr></tbody>
   </table></div>
-  <h3 style="margin:18px 0 4px">Görev performansı — <span id="selName">koşu seçilmedi</span></h3>
+  <h3 style="margin:18px 0 4px">Doğrulama performansı: <span id="selName">koşu seçilmedi</span></h3>
   <div class="tiles" id="selTiles" style="margin-bottom:12px"></div>
   <div class="grid3" id="perfCharts"></div>
   <h3 style="margin:18px 0 4px">PPO'nun iç göstergeleri</h3>
-  <p class="lead">Eğitim sağlıklıysa entropi yavaşça azalır, açıklanan varyans 1'e doğru yükselir, KL küçük kalır.</p>
+  <p class="lead">Sağlıklı bir eğitimde entropi yavaşça azalır, açıklanan varyans 1'e doğru yükselir, KL küçük kalır.</p>
   <div class="grid3" id="diagCharts"></div>
+</section>
+
+<!-- =============================== DEFINITIONS =============================== -->
+<section id="defs">
+  <h2>Tanımlar</h2>
+  <div class="grid">
+    <div class="card table-wrap"><h3 style="margin:0 0 6px;font-size:16px">Ölçütler</h3><table class="defs"><tbody>
+      <tr><td>Toplanan değer oranı</td><td>Gözlenen hedeflerden toplanan beklenen değer ÷ görev boyunca ortaya çıkan bütün hedeflerin değeri. Değer; gecikmeyle (eskime), uçulan mesafeyle (risk), kötü hava ve bozuk sensörle azalır; kritik hedefte son tarih geçerse sıfırlanır. Yüksek daha iyi.</td></tr>
+      <tr><td>Skor</td><td>v1: J = 0,5 × toplanan değer oranı − 0,5 × görev süresi / 2400 s. v2: skor = toplanan değer oranı. Eğitimde ödül bu skorun adım adım karşılığıdır. Yüksek daha iyi.</td></tr>
+      <tr><td>Görev süresi</td><td>Son gözlemin bittiği an. Tamamlanan hedef sayısıyla birlikte okunmalıdır. Düşük daha iyi.</td></tr>
+      <tr><td>Kritik hedef zamanında</td><td>v2: gözlemi son tarihinden önce başlayan kritik hedeflerin oranı. Yüksek daha iyi.</td></tr>
+      <tr><td>Galibiyet sayısı</td><td>Test görevlerinin kaçında yapay zekâ (tohum ortalaması) rakipten daha fazla değer topladı; 0,1 puandan küçük farklar beraberlik sayılır.</td></tr>
+      <tr><td>Anlamlılık</td><td>Aynı görevler üzerinde eşleştirilmiş Wilcoxon testi, Holm düzeltmesi; aralıklar %95 bootstrap güven aralığıdır.</td></tr>
+    </tbody></table></div>
+    <div class="card table-wrap"><h3 style="margin:0 0 6px;font-size:16px">Karar vericiler</h3><table class="defs"><tbody>
+      <tr><td>Yapay zekâ (hedef-odaklı ağ)</td><td>MaskablePPO. Her hedefe aynı küçük ağ uygulanır ve hedefe bir puan verir; boşa çıkan drone en yüksek puanlı geçerli hedefe gider. Kural verilmedi; ödülden öğrendi.</td></tr>
+      <tr><td>Yapay zekâ + ileriye bakma</td><td>Her kararda modelin en yüksek puan verdiği iki hedef, gelecekteki olaylar bilinmeden simülatörün bir kopyasında görev sonuna kadar oynatılır; daha çok değer getiren seçilir. Karar başına birkaç milisaniye sürer.</td></tr>
+      <tr><td>Klasik: en yakın hedef</td><td>Boşa çıkan drone kendisine en yakın geçerli hedefe gider.</td></tr>
+      <tr><td>Klasik: değer ÷ süre</td><td>Beklenen değer ÷ (uçuş + gözlem süresi) en yüksek olan hedef.</td></tr>
+      <tr><td>Klasik: planlayıcı (RH-RK)</td><td>Her kararda bütün dronelar için tam plan arar (makalenin rastgele-anahtar kodlaması, karga arama algoritması, 40 × 40 değerlendirme) ve planın ilk adımını uygular. Makaledeki MDCSATA algoritması değildir.</td></tr>
+      <tr><td>Rastgele seçim</td><td>Geçerli hedeflerden rastgele biri; alt sınır.</td></tr>
+      <tr><td>Yeniden görevlendirme (v2)</td><td>Yeni bir hedef çıktığında veya bir drone düştüğünde, yolda olan her drone yeniden karar verir: hedefine devam eder ya da başka bir hedefe geçer. Bütün yöntemler bu fırsatı kendi kuralıyla kullanır; gözlem yapan drone kesilmez.</td></tr>
+      <tr><td>Geçerli hedef</td><td>Bütün yöntemler için aynı kural: tamamlanmamış, başka drone'a atanmamış, pili yeten ve (v2) drone'un gerekli sensörü çalışan hedef; v2'de son tarihine yetişilemeyen kritik hedef geçersizdir.</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="card table-wrap" style="margin-top:14px"><h3 style="margin:0 0 6px;font-size:16px">Ortamlar</h3><table class="defs"><thead><tr><th></th><th>Makale ortamı (v1)</th><th>Genişletilmiş ortam (v2)</th></tr></thead><tbody id="envTable"></tbody></table></div>
 </section>
 </main>
 <div class="tip" id="tip"></div>
@@ -480,14 +340,13 @@ summary { cursor: pointer; color: var(--text-secondary); font-size: 14px; }
 const $ = (id) => document.getElementById(id);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const nf = (v, d = 3) => (v == null || Number.isNaN(v)) ? "–" : Number(v).toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
-const pct = (v, d = 1) => v == null ? "–" : "%" + nf(100 * v, d);
+const pct = (v, d = 1) => v == null || Number.isNaN(v) ? "–" : "%" + nf(100 * v, d);
+const signed = (v, d = 1) => (v >= 0 ? "+" : "−") + nf(Math.abs(v), d);
 const steps = (v) => v == null ? "–" : v >= 1e6 ? nf(v / 1e6, 1) + " M" : v >= 1e3 ? nf(v / 1e3, 0) + " B" : nf(v, 0);
-const words = (v) => v == null ? "–" : v >= 1e6 ? nf(v / 1e6, 1) + " milyon" : v >= 1e3 ? nf(v / 1e3, 0) + " bin" : nf(v, 0);
 const mmss = (s) => { if (s == null || !isFinite(s)) return "–"; s = Math.max(0, Math.round(s)); return s < 60 ? `${s} sn` : s % 60 ? `${Math.floor(s / 60)} dk ${s % 60} sn` : `${s / 60} dk`; };
 const clock = (s) => { s = Math.max(0, Math.round(s || 0)); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
 const dur = (s) => { if (s == null || !isFinite(s)) return "–"; s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h} sa ${m} dk` : m ? `${m} dk ${x} sn` : `${x} sn`; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const isExpert = () => document.body.classList.contains("expert");
 async function getJSON(url) {
   const r = await fetch(url, { cache: "no-store" });
   const j = await r.json();
@@ -497,16 +356,29 @@ async function getJSON(url) {
 
 const METHOD_TR = {
   random: "Rastgele seçim", greedy_nearest: "Klasik: en yakın hedef", greedy_value_rate: "Klasik: değer ÷ süre",
-  rh_rk: "Klasik: planlayıcı (RH-RK)", ppo: "Yapay zekâ · düz ağ (MLP)", ppo_entity: "Yapay zekâ",
-  ppo_entity_lookahead: "Yapay zekâ + ileriye bakma", ppo_attention: "Yapay zekâ · dikkat ağı",
+  rh_rk: "Klasik: planlayıcı (RH-RK)", ppo: "Yapay zekâ: düz ağ (MLP)", ppo_entity: "Yapay zekâ: hedef-odaklı ağ",
+  ppo_entity_lookahead: "Yapay zekâ + ileriye bakma", ppo_attention: "Yapay zekâ: dikkat ağı",
+  ppo_entity_hard: "Yapay zekâ: hedef-odaklı ağ (v2)", ppo_entity_hard_lookahead: "Yapay zekâ (v2) + ileriye bakma",
 };
-const METHOD_ORDER = ["random", "greedy_value_rate", "greedy_nearest", "rh_rk", "ppo", "ppo_entity", "ppo_attention", "ppo_entity_lookahead"];
-const GROUP_TR = { ppo_default: "Yapay zekâ · düz ağ (MLP)", ppo_entity: "Yapay zekâ · hedef-odaklı ağ", ppo_attention: "Yapay zekâ · dikkat ağı" };
-const SENSOR_TR = { VL: "kamera", IR: "kızılötesi kamera", RD: "radar" };
-const KIND_TR = { idle: "Boşta, görev bekliyor", transit: "uçuyor", observe: "gözlüyor", failed: "Düştü", depleted: "Pili bitti" };
-const SIMPLE_RULE = "base:greedy_nearest";
+const METHOD_ORDER = ["random", "greedy_value_rate", "greedy_nearest", "rh_rk", "ppo", "ppo_attention", "ppo_entity", "ppo_entity_lookahead", "ppo_entity_hard", "ppo_entity_hard_lookahead"];
+const CLASSIC = ["greedy_nearest", "greedy_value_rate", "rh_rk"];
+const GROUP_TR = { ppo_default: "Yapay zekâ: düz ağ (MLP)", ppo_entity: "Yapay zekâ: hedef-odaklı ağ", ppo_attention: "Yapay zekâ: dikkat ağı", ppo_entity_hard: "Yapay zekâ: hedef-odaklı ağ (v2)" };
+const SENSOR_TR = { VL: "kamera", IR: "kızılötesi", RD: "radar" };
+const SENSOR_LETTER = { IR: "K", RD: "R", VL: "G" };
+const KIND_TR = { idle: "boşta", transit: "uçuyor", observe: "gözlüyor", failed: "düştü", depleted: "pili bitti" };
+const EVENT_TR = { uav_crash: "Drone düştü", sensor_damage: "Sensör arızası", weather: "Hava bozuldu", target_move: "Hedef yer değiştirdi", value_change: "Hedefin değeri düştü", new_target: "Yeni hedef", preference_shift: "Öncelik değişti" };
+const EVENT_COLOR = { uav_crash: "--critical", sensor_damage: "--warning", weather: "--axis", target_move: "--series-5", value_change: "--series-4", new_target: "--good", preference_shift: "--muted" };
 
-// ===================================================================== theme & view
+// ===================================================================== state
+let envs = [];
+let envId = "v1";
+let state = { runs: [] };
+let presets = [];
+const baselines = {};
+const env = () => envs.find((e) => e.id === envId) || { groups: [], ai_group: "ppo_entity", title: envId, description: "" };
+const isV2 = () => envId === "v2";
+
+// ===================================================================== theme
 (function initTheme() {
   try { const t = localStorage.getItem("dash-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
   $("themeBtn").onclick = () => {
@@ -516,115 +388,113 @@ const SIMPLE_RULE = "base:greedy_nearest";
     rebuildAllCharts(); drawAll();
   };
 })();
-function setView(expert, boot = false) {
-  document.body.classList.toggle("expert", expert);
-  $("viewExpert").classList.toggle("on", expert);
-  $("viewSimple").classList.toggle("on", !expert);
-  try { localStorage.setItem("dash-view", expert ? "expert" : "simple"); } catch (e) {}
-  if (!expert) {
-    // The simple view always shows the same, easy-to-explain match-up.
-    const ai = aiSources()[0]?.value || null;
-    const changed = sim.mode !== "compare" || sim.sides[0].source !== ai || sim.sides[1].source !== SIMPLE_RULE;
-    sim.mode = "compare"; sim.sides[0].source = ai; sim.sides[1].source = SIMPLE_RULE;
-    $("modeCompare").classList.add("on"); $("modeSingle").classList.remove("on");
-    $("pauseOnEvent").checked = true; $("showTrails").checked = true;
-    if (changed && !boot) { buildArena(); loadAllSides(); }
-  }
-  if (!boot) { buildArena(); drawAll(); }
-  setTimeout(() => { Object.values(expertCharts).forEach((c) => c.chart.resize()); Object.values(charts).forEach((c) => c.resize?.()); }, 30);
+
+// ===================================================================== environment switch
+function renderEnvSeg() {
+  $("envSeg").innerHTML = envs.map((e) => `<button data-env="${e.id}" class="${e.id === envId ? "on" : ""}">${esc(e.title)}</button>`).join("");
+  $("envSeg").querySelectorAll("button").forEach((b) => b.onclick = () => setEnv(b.dataset.env));
 }
-$("viewSimple").onclick = () => setView(false);
-$("viewExpert").onclick = () => setView(true);
+function setEnv(id, boot = false) {
+  envId = id;
+  try { localStorage.setItem("dash-env", id); } catch (e) {}
+  renderEnvSeg();
+  $("envNote").innerHTML = `<b>${esc(env().title)}.</b> ${esc(env().description)}`;
+  document.querySelectorAll(".v2-only").forEach((el) => el.style.display = isV2() ? "" : "none");
+  if (boot) return;
+  const first = presets.find((p) => p.env === envId);
+  sim.preset = first ? first.id : sim.preset; sim.seed = 0; sim.t = 0;
+  sim.sides[0].source = defaultAI(); sim.sides[1].source = "base:greedy_nearest";
+  renderScenarios(); buildArena(); onScenarioChange(true);
+  loadResults(); pollBaselines(); pollGroups();
+  selected = null; compare.clear(); renderRuns(); pollSeries();
+}
 
 // ===================================================================== data
-let state = { runs: [] };
-let baselines = null;
-let presets = [];
 async function pollState() {
   try {
     state = await getJSON("/api/state");
     $("updated").textContent = "güncellendi " + new Date().toLocaleTimeString("tr-TR");
-    renderDecisionMakers(); renderExpert();
+    renderDecisionMakers(); renderRuns();
   } catch (e) { $("updated").innerHTML = '<span class="warn">sunucuya ulaşılamıyor</span>'; }
 }
 async function pollBaselines() {
+  const id = envId;
   try {
-    baselines = await getJSON("/api/baselines");
-    updateLearning(); updateExpertCharts();
-    if (baselines.status !== "ready" && baselines.status !== "error") setTimeout(pollBaselines, 8000);
+    baselines[id] = await getJSON("/api/baselines?env=" + id);
+    if (id === envId) { updateLearning(); updateExpertCharts(); }
+    if (baselines[id].status !== "ready" && baselines[id].status !== "error") setTimeout(pollBaselines, 8000);
   } catch (e) { setTimeout(pollBaselines, 8000); }
 }
-function bestBaseline(metric, higherBetter = true) {
-  if (!baselines?.methods) return null;
-  let best = null;
-  for (const [m, v] of Object.entries(baselines.methods)) {
-    if (m === "random" || v[metric] == null) continue;
-    if (!best || (higherBetter ? v[metric] > best.v : v[metric] < best.v)) best = { m, v: v[metric] };
-  }
-  return best;
-}
+const curBaselines = () => baselines[envId];
 
 // ===================================================================== SIMULATION
 const sim = {
   preset: "paper_S1", seed: 0, mode: "compare", t: 0, playing: false, lastFrame: null, holdUntil: 0, speed: 60,
   sides: [
     { key: "A", source: null, replay: null, canvas: null, hits: [], lastT: 0 },
-    { key: "B", source: SIMPLE_RULE, replay: null, canvas: null, hits: [], lastT: 0 },
+    { key: "B", source: "base:greedy_nearest", replay: null, canvas: null, hits: [], lastT: 0 },
   ],
 };
-function isAI(source) { return source?.startsWith("run:") || source?.startsWith("look:"); }
+const isAI = (source) => source?.startsWith("run:") || source?.startsWith("look:");
 
-async function loadPresets() {
-  presets = await getJSON("/api/presets");
-  const groups = [...new Set(presets.map((p) => p.group))];
+function renderScenarios() {
+  const list = presets.filter((p) => p.env === envId);
+  const groups = [...new Set(list.map((p) => p.group))];
   $("scenGroups").innerHTML = groups.map((g) => `<div class="scen-group"><h4>${esc(g)}</h4><div class="chips">${
-    presets.filter((p) => p.group === g).map((p) => `<button class="chip" data-id="${p.id}"><span class="ic">${p.icon}</span>${esc(p.title)}</button>`).join("")
+    list.filter((p) => p.group === g).map((p) => `<button class="chip" data-id="${p.id}">${esc(p.title)}</button>`).join("")
   }</div></div>`).join("");
   $("scenGroups").querySelectorAll(".chip").forEach((b) => b.onclick = () => { sim.preset = b.dataset.id; sim.seed = 0; onScenarioChange(true); });
-  onScenarioChange(false);
 }
+async function loadPresets() { presets = await getJSON("/api/presets"); renderScenarios(); }
 function onScenarioChange(resetTime) {
-  const p = presets.find((x) => x.id === sim.preset) || presets[0];
+  const list = presets.filter((p) => p.env === envId);
+  const p = list.find((x) => x.id === sim.preset) || list[0];
   if (!p) return;
   sim.preset = p.id;
   $("scenGroups").querySelectorAll(".chip").forEach((b) => b.classList.toggle("on", b.dataset.id === sim.preset));
-  $("scenDesc").innerHTML = `<span class="ic">${p.icon}</span><span><b>${esc(p.title)}:</b> ${esc(p.description)}</span>
-    <span style="flex:1"></span>${p.kind === "paper" ? '<span class="sub">makaledeki senaryonun birebir aynısı</span>'
-      : `<button id="reseedBtn" title="Aynı türde, farklı yerleşimli yeni bir görev">🎲 Başka bir harita (${sim.seed + 1})</button>`}`;
+  $("scenDesc").innerHTML = `<span><b>${esc(p.title)}:</b> ${esc(p.description)}</span><span style="flex:1"></span>${
+    p.kind === "paper" ? '<span class="sub">makaledeki senaryonun birebir aynısı</span>'
+      : `<span class="sub">harita no. ${sim.seed + 1}</span><button id="reseedBtn" title="Aynı türde, farklı yerleşimli yeni bir görev">Başka harita</button>`}`;
   const rb = $("reseedBtn"); if (rb) rb.onclick = () => { sim.seed += 1; onScenarioChange(true); };
   if (resetTime) sim.t = 0;
   stop(); clearToasts(); $("verdict").innerHTML = ""; loadAllSides();
 }
 
+function envRuns(group) { return state.runs.filter((r) => r.group === group).sort((a, b) => (a.seed ?? 0) - (b.seed ?? 0)); }
 function aiSources() {
   const out = [];
-  for (const g of ["ppo_entity", "ppo_attention", "ppo_default"]) {
-    const runs = state.runs.filter((r) => r.group === g).sort((a, b) => (a.seed ?? 0) - (b.seed ?? 0));
-    const r = runs.find((x) => x.status === "done") || runs[0];
-    if (!r) continue;
-    out.push({ value: `run:${r.name}`, label: `${GROUP_TR[g]} (tohum ${r.seed})` });
-    if (g === "ppo_entity") out.push({ value: `look:${r.name}`, label: `${GROUP_TR[g]} + ileriye bakma (tohum ${r.seed})` });
+  for (const g of env().groups) {
+    for (const r of envRuns(g)) {
+      out.push({ value: `run:${r.name}`, label: `${GROUP_TR[g] || g}, tohum ${r.seed}${r.status === "done" ? "" : " (eğitim sürüyor)"}` });
+      if (g === "ppo_entity" || g === "ppo_entity_hard") out.push({ value: `look:${r.name}`, label: `${GROUP_TR[g]} + ileriye bakma, tohum ${r.seed}` });
+    }
   }
-  for (const r of state.runs) if (!["ppo_entity", "ppo_default", "ppo_attention"].includes(r.group)) out.push({ value: `run:${r.name}`, label: `Deneysel: ${r.name}` });
   return out;
 }
+function defaultAI() {
+  const runs = envRuns(env().ai_group);
+  const r = runs.find((x) => x.status === "done") || runs[0];
+  return r ? `run:${r.name}` : null;
+}
 const BASE_SOURCES = [
-  { value: "base:greedy_nearest", label: "Klasik: en yakın hedefe git" },
+  { value: "base:greedy_nearest", label: "Klasik: en yakın hedef" },
   { value: "base:greedy_value_rate", label: "Klasik: değer ÷ süre" },
   { value: "base:rh_rk", label: "Klasik: planlayıcı (RH-RK)" },
   { value: "base:random", label: "Rastgele seçim" },
 ];
-function sourceLabel(v) { return [...aiSources(), ...BASE_SOURCES].find((o) => o.value === v)?.label || v; }
-function teamName(s) { return isAI(s.source) ? "🤖 Yapay zekâ" : s.source === "base:random" ? "🎲 Rastgele" : "📏 Klasik yöntem"; }
-function teamSub(s) { return isExpert() ? sourceLabel(s.source) : isAI(s.source) ? "kendi kendine öğrendi" : "kural: en yakın hedefe git"; }
+function sourceLabel(v) { return [...aiSources(), ...BASE_SOURCES].find((o) => o.value === v)?.label || v || "–"; }
+function teamName(s) { return isAI(s.source) ? "Yapay zekâ" : s.source === "base:random" ? "Rastgele" : "Klasik yöntem"; }
 function teamColor(s) { return isAI(s.source) ? css("--ai") : css("--rule"); }
 
 function renderDecisionMakers() {
   const ai = aiSources();
-  if (!sim.sides[0].source && ai.length) { sim.sides[0].source = ai[0].value; buildArena(); loadAllSides(); }
+  if (!sim.sides[0].source || !(isAI(sim.sides[0].source) ? ai.some((o) => o.value === sim.sides[0].source) : true)) {
+    const d = defaultAI();
+    if (d && d !== sim.sides[0].source) { sim.sides[0].source = d; buildArena(); loadAllSides(); }
+  }
   for (const side of sim.sides) {
     const sel = $(`src${side.key}`); if (!sel) continue;
-    const html = `<optgroup label="Yapay zekâ">${ai.filter((o) => isExpert() || !o.value.startsWith("run:abl")).map((o) => `<option value="${o.value}">${esc(o.label)}</option>`).join("")}</optgroup>
+    const html = `<optgroup label="Yapay zekâ (${esc(env().title)})">${ai.map((o) => `<option value="${o.value}">${esc(o.label)}</option>`).join("")}</optgroup>
       <optgroup label="Klasik yöntemler">${BASE_SOURCES.map((o) => `<option value="${o.value}">${esc(o.label)}</option>`).join("")}</optgroup>`;
     if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
     if (side.source) sel.value = side.source;
@@ -638,12 +508,11 @@ function buildArena() {
   const sides = single ? [sim.sides[0]] : sim.sides;
   arena.innerHTML = sides.map((s) => `
     <div class="side">
-      <div class="side-head"><span class="who" style="color:${teamColor(s)}">${teamName(s)}</span>
-        <span class="sub simple-only">${esc(teamSub(s))}</span>
-        <select id="src${s.key}" class="expert-only inline" aria-label="Karar verici"></select><span class="sub" id="status${s.key}"></span></div>
+      <div class="side-head"><b style="color:${teamColor(s)}">${teamName(s)}</b>
+        <select id="src${s.key}" aria-label="Karar verici"></select><span class="sub" id="status${s.key}"></span></div>
       <div class="map-wrap ${isAI(s.source) ? "ai" : "rule"}"><canvas id="cv${s.key}" aria-label="Görev haritası"></canvas><div class="toast-stack" id="toasts${s.key}"></div></div>
-      <div class="score expert-only" id="score${s.key}"></div>
-      ${single ? "" : `<div class="card drones expert-only" id="drones${s.key}"></div>`}
+      <div class="score" id="score${s.key}"></div>
+      ${single ? "" : `<div class="card drones" id="drones${s.key}"></div>`}
     </div>`).join("") + (single ? `
     <div class="side">
       <div class="card drones" id="drones${sim.sides[0].key}"></div>
@@ -668,12 +537,12 @@ $("speedSeg").querySelectorAll("button").forEach((b) => b.onclick = () => {
 function activeSides() { return sim.mode === "single" ? [sim.sides[0]] : sim.sides; }
 function loadAllSides() { activeSides().forEach(loadSide); }
 async function loadSide(s) {
-  if (!s.source) return;
+  const st = $(`status${s.key}`);
+  if (!s.source) { if (st) st.textContent = "bu ortam için eğitilmiş model yok"; s.replay = null; drawAll(); return; }
   const [kind, val] = s.source.split(":");
   const url = kind === "run" || kind === "look"
     ? `/api/replay?name=${encodeURIComponent(val)}&model=${kind === "look" ? "lookahead" : "best"}&scenario=${sim.preset}&seed=${sim.seed}`
     : `/api/replay?model=${val}&scenario=${sim.preset}&seed=${sim.seed}`;
-  const st = $(`status${s.key}`);
   if (st) st.textContent = "hazırlanıyor…";
   s.replay = null; drawAll();
   const want = url;
@@ -685,6 +554,7 @@ async function loadSide(s) {
     r.byUav = r.uavs.map((_, i) => r.activities.filter((a) => a.uav === i));
     r.slotToId = Object.fromEntries(r.targets.map((t) => [t.slot, t.id]));
     r.tdead = r.byUav.map((acts) => (acts.find((a) => a.kind === "failed" || a.kind === "depleted")?.t0) ?? Infinity);
+    r.critical = r.targets.filter((t) => t.deadline_time != null);
     s.replay = r; s.lastT = sim.t;
     if (st) st.textContent = "";
   } catch (e) { if (st) st.textContent = "yüklenemedi: " + e.message; }
@@ -728,10 +598,14 @@ function weatherAt(r, t) {
   for (const e of r.events) if (e.type === "weather" && e.effect === "applied" && e.time <= t) w = e.omega;
   return w;
 }
+const onTime = (tg) => tg.completed && tg.deadline_time != null && tg.completion_time - tg.observation_time <= tg.deadline_time + 1e-6;
 function collectedAt(r, t) {
-  let v = 0, n = 0;
-  for (const tg of r.targets) if (tg.completed && tg.completion_time <= t) { v += tg.collected_value; n++; }
-  return { v, n, appeared: r.targets.filter((q) => q.appear_time <= t).length, frac: v / Math.max(r.metrics.appeared_value, 1e-9) };
+  let v = 0, n = 0, crit = 0, critSeen = 0;
+  for (const tg of r.targets) {
+    if (tg.appear_time <= t && tg.deadline_time != null) critSeen++;
+    if (tg.completed && tg.completion_time <= t) { v += tg.collected_value; n++; if (onTime(tg)) crit++; }
+  }
+  return { v, n, crit, critSeen, appeared: r.targets.filter((q) => q.appear_time <= t).length, frac: v / Math.max(r.metrics.appeared_value, 1e-9) };
 }
 
 // ---------- drawing ----------
@@ -744,8 +618,8 @@ function drawSide(s) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = css("--surface-1"); ctx.fillRect(0, 0, W, W);
   const r = s.replay; s.hits = [];
-  if (!r) { ctx.fillStyle = css("--muted"); ctx.font = "16px system-ui"; ctx.fillText("Görev hazırlanıyor…", 22, 36); return; }
-  const t = Math.min(sim.t, r.tmax);
+  if (!r) { ctx.fillStyle = css("--muted"); ctx.font = "15px system-ui"; ctx.fillText(s.source ? "Görev hazırlanıyor…" : "Bu ortam için eğitilmiş model yok", 22, 36); return; }
+  const t = Math.min(sim.t, r.tmax), showIds = $("showIds").checked;
   const pad = 22, L = r.airspace, S = W - 2 * pad;
   const X = (x) => pad + S * x / L[0], Y = (y) => pad + S * (1 - y / L[1]);
   const scale = S / L[0];
@@ -755,14 +629,14 @@ function drawSide(s) {
     ctx.beginPath(); ctx.moveTo(X(v), Y(0)); ctx.lineTo(X(v), Y(L[1])); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(X(0), Y(v)); ctx.lineTo(X(L[0]), Y(v)); ctx.stroke();
   }
-  ctx.fillStyle = css("--muted"); ctx.font = "10px system-ui"; ctx.fillText("1 kare = 1 km", X(L[0]) - 70, Y(0) + 14);
-  // base
+  ctx.fillStyle = css("--muted"); ctx.font = "10px system-ui"; ctx.fillText("1 kare = 1 km", X(L[0]) - 66, Y(0) + 14);
+  // base (take-off area)
   const starts = r.byUav.map((acts) => acts[0].p0);
   const bx0 = Math.max(0, Math.min(...starts.map((p) => p[0])) - 250), bx1 = Math.max(...starts.map((p) => p[0])) + 250;
   const by0 = Math.max(0, Math.min(...starts.map((p) => p[1])) - 250), by1 = Math.max(...starts.map((p) => p[1])) + 250;
   ctx.fillStyle = css("--surface-2"); ctx.strokeStyle = css("--axis"); ctx.setLineDash([4, 3]);
   ctx.beginPath(); ctx.roundRect(X(bx0), Y(by1), (bx1 - bx0) * scale, (by1 - by0) * scale, 6); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = css("--text-secondary"); ctx.font = "bold 11px system-ui"; ctx.fillText("🏠 ÜS", X(bx0) + 4, Y(by1) + 13);
+  ctx.fillStyle = css("--text-secondary"); ctx.font = "bold 11px system-ui"; ctx.fillText("ÜS", X(bx0) + 5, Y(by1) + 13);
 
   const uav = r.uavs.map((_, i) => uavAt(r, i, t));
   if ($("showTrails").checked) {
@@ -789,33 +663,50 @@ function drawSide(s) {
     const p = targetPosAt(r, tg, t), value = targetValueAt(r, tg, t);
     const rad = 5 + 9 * Math.sqrt(Math.max(value, 1) / vmax);
     const [x, y] = [X(p[0]), Y(p[1])];
+    const critical = tg.deadline_time != null;
     if (tg.initial_position[0] !== p[0] || tg.initial_position[1] !== p[1]) {
       ctx.strokeStyle = css("--muted"); ctx.setLineDash([2, 3]); ctx.beginPath();
       ctx.moveTo(X(tg.initial_position[0]), Y(tg.initial_position[1])); ctx.lineTo(x, y); ctx.stroke(); ctx.setLineDash([]);
     }
+    const shape = () => {
+      ctx.beginPath();
+      if (critical) { ctx.moveTo(x, y - rad * 1.2); ctx.lineTo(x + rad * 1.2, y); ctx.lineTo(x, y + rad * 1.2); ctx.lineTo(x - rad * 1.2, y); ctx.closePath(); }
+      else ctx.arc(x, y, rad, 0, 2 * Math.PI);
+    };
     const done = tg.completed && tg.completion_time <= t;
-    ctx.beginPath(); ctx.arc(x, y, rad, 0, 2 * Math.PI);
+    const expired = critical && !done && observing[tg.slot] == null && t > tg.deadline_time && !(assigned[tg.slot] != null && assignedInTime(r, tg, t));
     let status;
+    shape();
     if (done) {
       ctx.fillStyle = css("--good"); ctx.fill();
       ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - rad * .45, y); ctx.lineTo(x - rad * .1, y + rad * .4); ctx.lineTo(x + rad * .5, y - rad * .4); ctx.stroke();
-      status = `Gözlendi ✓ (${mmss(tg.completion_time)} anında)`;
+      status = `gözlendi (${mmss(tg.completion_time)} anında${critical ? (onTime(tg) ? ", zamanında" : ", geç") : ""})`;
     } else if (observing[tg.slot] != null) {
       const i = observing[tg.slot];
       ctx.fillStyle = uColor(i); ctx.globalAlpha = 0.55; ctx.fill(); ctx.globalAlpha = 1;
       ctx.strokeStyle = uColor(i); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, rad + 3 + 4 * pulse, 0, 2 * Math.PI); ctx.stroke();
       status = `${r.uavs[i].id} şu anda gözlüyor`;
+    } else if (expired) {
+      ctx.fillStyle = css("--track"); ctx.fill(); ctx.strokeStyle = css("--muted"); ctx.setLineDash([3, 3]); ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+      status = "son tarihi geçti; artık değersiz";
     } else if (assigned[tg.slot] != null) {
       const i = assigned[tg.slot];
       ctx.fillStyle = css("--surface-1"); ctx.fill(); ctx.strokeStyle = uColor(i); ctx.lineWidth = 3; ctx.stroke();
       status = `${r.uavs[i].id} buraya uçuyor`;
     } else {
-      ctx.fillStyle = css("--surface-1"); ctx.fill(); ctx.strokeStyle = css("--text-primary"); ctx.lineWidth = 1.5; ctx.stroke();
-      status = "Sırasını bekliyor";
+      ctx.fillStyle = css("--surface-1"); ctx.fill(); ctx.strokeStyle = critical ? css("--critical") : css("--text-primary"); ctx.lineWidth = critical ? 2.5 : 1.5; ctx.stroke();
+      status = "sırasını bekliyor";
     }
-    if (isExpert()) { ctx.fillStyle = css("--text-secondary"); ctx.font = "10.5px system-ui"; ctx.fillText(tg.id, x + rad + 2, y - rad + 2); }
-    const imp = value >= 0.85 * vmax ? "çok önemli" : value >= 0.65 * vmax ? "önemli" : "normal";
-    s.hits.push({ x, y, r: rad + 4, html: `<b>Hedef ${esc(tg.id)}</b> · ${imp}<br>Durum: <b>${esc(status)}</b><br>Gözlem süresi: ${nf(tg.observation_time, 0)} sn${tg.appear_time > 0 ? `<br>Görev sırasında ortaya çıktı (${mmss(tg.appear_time)})` : ""}${isExpert() ? `<br><span class="muted">değer ${nf(value, 0)}${tg.completed ? ` · toplanan ${nf(tg.collected_value, 1)}` : ""}</span>` : ""}` });
+    if (tg.required_sensor && !done) {
+      ctx.fillStyle = expired ? css("--muted") : css("--text-primary"); ctx.font = "bold 10px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(SENSOR_LETTER[tg.required_sensor] || "?", x, y + 0.5); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    }
+    let label = showIds ? tg.id : "";
+    if (critical && !done && !expired) { const left = tg.deadline_time - t; label += (label ? " " : "") + clock(Math.max(0, left)); }
+    if (label) { ctx.fillStyle = critical && !done && !expired ? css("--bad-text") : css("--text-secondary"); ctx.font = "10.5px system-ui"; ctx.fillText(label, x + rad + 3, y - rad + 3); }
+    const req = tg.required_sensor ? `<br>Gerekli sensör: <b>${SENSOR_TR[tg.required_sensor]}</b>` : "";
+    const dl = critical ? `<br>Kritik hedef: gözlem en geç <b>${clock(tg.deadline_time)}</b> anında başlamalı` : "";
+    s.hits.push({ x, y, r: rad + 4, html: `<b>Hedef ${esc(tg.id)}</b><br>Durum: <b>${esc(status)}</b><br>Değer: ${nf(value, 0)}${tg.completed ? ` (toplanan ${nf(tg.collected_value, 1)})` : ""}<br>Gözlem süresi: ${nf(tg.observation_time, 0)} sn${req}${dl}${tg.appear_time > 0 ? `<br>Görev sırasında ortaya çıktı (${clock(tg.appear_time)})` : ""}` });
   }
   uav.forEach((u, i) => {
     const [x, y] = [X(u.pos[0]), Y(u.pos[1])];
@@ -837,23 +728,28 @@ function drawSide(s) {
       ctx.fillStyle = u.battery < 0.15 ? css("--critical") : u.battery < 0.3 ? css("--warning") : css("--good");
       ctx.fillRect(bxp, byp, bw * u.battery, bh);
     }
-    ctx.fillStyle = css("--text-primary"); ctx.font = "bold 11.5px system-ui"; ctx.fillText(r.uavs[i].id, x + 11, y - 7);
+    if (showIds) { ctx.fillStyle = css("--text-primary"); ctx.font = "bold 11.5px system-ui"; ctx.fillText(r.uavs[i].id + (r.uavs[i].sensors.includes("RD") ? " (R)" : ""), x + 11, y - 7); }
     const tgId = u.act.slot != null ? r.slotToId[u.act.slot] : null;
     const doing = dead ? KIND_TR[u.act.kind] : u.act.kind === "idle" ? KIND_TR.idle : `${tgId} hedefine ${KIND_TR[u.act.kind]}`;
     const sensors = r.uavs[i].sensors.map((m) => SENSOR_TR[m] + (u.brokenSensors.includes(m) ? " (bozuk)" : "")).join(", ");
-    s.hits.push({ x, y, r: 15, html: `<b>Drone ${esc(r.uavs[i].id)}</b><br>Ne yapıyor: <b>${esc(doing)}</b><br>Pil: <b>%${nf(100 * u.battery, 0)}</b><br>Sensörler: ${esc(sensors)}<br>Gözlediği hedef sayısı: ${u.done}` });
+    s.hits.push({ x, y, r: 15, html: `<b>Drone ${esc(r.uavs[i].id)}</b> (${esc(r.uavs[i].type)} tipi)<br>Ne yapıyor: <b>${esc(doing)}</b><br>Pil: <b>%${nf(100 * u.battery, 0)}</b><br>Sensörler: ${esc(sensors)}<br>Gözlediği hedef: ${u.done}` });
   });
   const w = weatherAt(r, t), wmean = w.reduce((a, b) => a + b, 0) / w.length;
   if (wmean < 0.97) {
-    ctx.fillStyle = `rgba(${css("--cloud")},${Math.min(0.2, (1 - wmean) * 0.35)})`; ctx.fillRect(pad, pad, S, S);
-    ctx.font = "26px system-ui"; ctx.globalAlpha = 0.45;
-    for (const [cx, cy] of [[.2, .25], [.55, .15], [.8, .4], [.35, .6], [.7, .75]]) ctx.fillText("☁", pad + S * cx, pad + S * cy);
-    ctx.globalAlpha = 1;
-    const chip = `☁ Kötü hava: sensörler %${nf(100 * Math.min(...w), 0)}–%${nf(100 * Math.max(...w), 0)} verimle görüyor`;
+    ctx.fillStyle = `rgba(${css("--cloud")},${Math.min(0.22, (1 - wmean) * 0.4)})`; ctx.fillRect(pad, pad, S, S);
+    const chip = `Kötü hava: sensör verimi %${nf(100 * Math.min(...w), 0)}–%${nf(100 * Math.max(...w), 0)}`;
     ctx.font = "12.5px system-ui"; const tw = ctx.measureText(chip).width;
     ctx.fillStyle = css("--surface-1"); ctx.globalAlpha = 0.92; ctx.fillRect(pad + 6, W - pad - 30, tw + 14, 24); ctx.globalAlpha = 1;
     ctx.fillStyle = css("--text-primary"); ctx.fillText(chip, pad + 13, W - pad - 13);
   }
+}
+// A critical target whose assigned UAV will still start the observation before the deadline.
+function assignedInTime(r, tg, t) {
+  for (let i = 0; i < r.uavs.length; i++) {
+    const a = uavAt(r, i, t).act;
+    if (a.kind === "transit" && a.slot === tg.slot) return a.t1 <= tg.deadline_time + 1e-6;
+  }
+  return false;
 }
 function hover(ev, s) {
   const rect = s.canvas.getBoundingClientRect();
@@ -863,58 +759,61 @@ function hover(ev, s) {
   const tip = $("tip");
   if (!best) { tip.style.display = "none"; return; }
   tip.innerHTML = best.html; tip.style.display = "block";
-  tip.style.left = Math.min(ev.clientX + 14, window.innerWidth - 280) + "px"; tip.style.top = (ev.clientY + 14) + "px";
+  tip.style.left = Math.min(ev.clientX + 14, window.innerWidth - 300) + "px"; tip.style.top = (ev.clientY + 14) + "px";
 }
 
-// ---------- race board (simple, always visible) ----------
+// ---------- race board ----------
 function renderRace() {
   const sides = activeSides();
   const box = $("race");
   const team = (s) => {
     const r = s.replay;
-    if (!r) return `<div class="team ${isAI(s.source) ? "" : "rule"}"><div class="name">${teamName(s)}</div><div class="sub">hazırlanıyor…</div></div>`;
+    if (!r) return `<div class="team ${isAI(s.source) ? "" : "rule"}"><div class="name">${teamName(s)}</div><div class="rulename">${esc(sourceLabel(s.source))}</div><div class="sub">hazırlanıyor…</div></div>`;
     const t = Math.min(sim.t, r.tmax), c = collectedAt(r, t);
     const alive = r.uavs.filter((_, i) => { const k = uavAt(r, i, t).act.kind; return k !== "failed" && k !== "depleted"; }).length;
     const fin = sim.t >= r.tmax;
+    const crit = r.critical.length ? `<div><div class="big">${c.crit}<span style="font-size:17px;color:var(--muted)"> / ${c.critSeen}</span></div><div class="lbl">kritik hedef zamanında</div></div>` : "";
     return `<div class="team ${isAI(s.source) ? "" : "rule"}">
-      <div class="name" style="color:${teamColor(s)}">${teamName(s)}</div><div class="rulename">${esc(teamSub(s))}</div>
+      <div class="name" style="color:${teamColor(s)}">${teamName(s)}</div><div class="rulename">${esc(sourceLabel(s.source))}</div>
       <div class="nums">
-        <div><div class="big">${c.n}<span style="font-size:18px;color:var(--muted)"> / ${c.appeared}</span></div><div class="lbl">hedef gözlendi</div></div>
-        <div><div class="big">${pct(c.frac, 0)}</div><div class="lbl">toplanan bilgi</div></div>
-        <div><div class="big" style="font-size:22px;padding-top:6px">${fin ? "✔ " + clock(r.metrics.makespan) : alive + " / " + r.uavs.length}</div><div class="lbl">${fin ? "görevi bitirdi" : "sağlam drone"}</div></div>
+        <div><div class="big">${pct(c.frac, 1)}</div><div class="lbl">toplanan değer</div></div>
+        <div><div class="big">${c.n}<span style="font-size:17px;color:var(--muted)"> / ${c.appeared}</span></div><div class="lbl">hedef gözlendi</div></div>
+        ${crit}
+        <div><div class="big" style="font-size:21px;padding-top:6px">${fin ? clock(r.metrics.makespan) : alive + " / " + r.uavs.length}</div><div class="lbl">${fin ? "görev süresi" : "çalışan drone"}</div></div>
       </div>
-      <div class="meter"><span style="width:${c.appeared ? 100 * c.n / c.appeared : 0}%;background:${teamColor(s)}"></span></div></div>`;
+      <div class="meter" title="toplanan değer oranı"><span style="width:${100 * Math.min(1, c.frac)}%;background:${teamColor(s)}"></span></div></div>`;
   };
   let mid = `<div class="mid"><div class="sub">görev saati</div><div class="clock">${clock(sim.t)}</div>`;
   if (sides.length === 2 && sides[0].replay && sides[1].replay) {
     const a = collectedAt(sides[0].replay, Math.min(sim.t, sides[0].replay.tmax)), b = collectedAt(sides[1].replay, Math.min(sim.t, sides[1].replay.tmax));
-    const d = a.frac - b.frac;
+    const d = 100 * (a.frac - b.frac);
     mid += sim.t <= 0 ? `<div class="lead-badge">Başlamaya hazır</div>`
-      : Math.abs(d) < 0.002 ? `<div class="lead-badge">Başa baş</div>`
-      : `<div class="lead-badge" style="color:${teamColor(d > 0 ? sides[0] : sides[1])}">Önde: ${teamName(d > 0 ? sides[0] : sides[1])}</div>`;
+      : Math.abs(d) < 0.1 ? `<div class="lead-badge">Başa baş</div>`
+      : `<div class="lead-badge" style="color:${teamColor(d > 0 ? sides[0] : sides[1])}">Önde: ${teamName(d > 0 ? sides[0] : sides[1])} (${nf(Math.abs(d), 1)} puan)</div>`;
   }
   mid += "</div>";
   box.style.gridTemplateColumns = sides.length === 2 ? "" : "1fr auto";
   box.innerHTML = sides.length === 2 ? team(sides[0]) + mid + team(sides[1]) : team(sides[0]) + mid;
 }
 
-// ---------- expert side info ----------
+// ---------- side info ----------
 function renderSideInfo() {
   for (const s of activeSides()) {
     const r = s.replay, score = $(`score${s.key}`), drones = $(`drones${s.key}`);
     if (!r) { if (score) score.innerHTML = ""; if (drones) drones.innerHTML = ""; continue; }
     const t = Math.min(sim.t, r.tmax), c = collectedAt(r, t), finished = sim.t >= r.tmax;
     if (score) score.innerHTML = `
-      <div class="card"><div class="label">Gözlenen hedef</div><div class="value">${c.n} / ${c.appeared}</div></div>
-      <div class="card"><div class="label">Toplanan bilgi</div><div class="value">${pct(c.frac)}</div><div class="note">toplam değere oranı</div></div>
-      <div class="card"><div class="label">${finished ? "Görev süresi" : "Geçen süre"}</div><div class="value">${mmss(finished ? r.metrics.makespan : t)}</div></div>`;
+      <div class="card"><div class="label">Toplanan değer</div><div class="value">${nf(c.v, 0)}</div></div>
+      <div class="card"><div class="label">Toplam hedef değeri</div><div class="value">${nf(r.metrics.appeared_value, 0)}</div></div>
+      <div class="card"><div class="label">${finished ? "Görev süresi" : "Geçen süre"}</div><div class="value">${mmss(finished ? r.metrics.makespan : t)}</div></div>
+      ${finished ? `<div class="card"><div class="label">Skor</div><div class="value">${nf(r.metrics.weighted_score, 3)}</div></div>` : ""}`;
     if (drones) drones.innerHTML = r.uavs.map((u, i) => {
       const st = uavAt(r, i, t), tgId = st.act.slot != null ? r.slotToId[st.act.slot] : "";
       const dead = st.act.kind === "failed" || st.act.kind === "depleted";
       const doing = dead ? KIND_TR[st.act.kind] : st.act.kind === "idle" ? KIND_TR.idle : `${tgId} hedefine ${KIND_TR[st.act.kind]}`;
       const bc = st.battery < 0.15 ? "--critical" : st.battery < 0.3 ? "--warning" : "--good";
       return `<div class="drone-row"><span class="sw" style="background:${uColor(i)}"></span><b>${u.id}</b>
-        <span class="st">${dead ? "✕ " : ""}${esc(doing)}${st.brokenSensors.length ? " · sensör arızalı" : ""}</span>
+        <span class="st">${esc(doing)} · ${u.type} tipi${u.sensors.includes("RD") ? ", radarlı" : ""}${st.brokenSensors.length ? " · arızalı sensör: " + st.brokenSensors.map((m) => SENSOR_TR[m]).join(", ") : ""}</span>
         <span class="batt"><i><s style="width:${Math.round(31 * st.battery)}px;background:var(${bc})"></s></i>%${nf(100 * st.battery, 0)}</span></div>`;
     }).join("");
   }
@@ -923,49 +822,49 @@ function renderSideInfo() {
   $("tSlider").max = Math.ceil(tmax); $("tSlider").value = Math.round(sim.t);
 }
 
-function eventSentence(e, r) {
-  if (e.effect !== "applied") return e.effect === "skipped_min_operational" ? null : `${eventIcon(e)} ${eventTitle(e)} — etkisi olmadı (hedef zaten gözlenmişti).`;
+function eventSentence(e) {
+  if (e.effect !== "applied") return e.effect === "skipped_min_operational" ? null : `${EVENT_TR[e.type] || e.type}: etkisi olmadı (hedef zaten gözlenmişti).`;
   switch (e.type) {
-    case "uav_crash": return `⚠ ${e.uav} düştü!` + (e.released_target ? ` Gittiği ${e.released_target} hedefi boşta kaldı; başka bir drone'a verilecek.` : "");
-    case "sensor_damage": return `🔧 ${e.uav} drone'unun ${SENSOR_TR[e.sensor] || e.sensor} sensörü bozuldu; artık daha kötü görüyor.`;
-    case "weather": return `☁ Hava bozuldu: sensörler %${nf(100 * Math.min(...e.omega), 0)}–%${nf(100 * Math.max(...e.omega), 0)} verimle çalışıyor.`;
-    case "target_move": return `➜ ${e.target} hedefi yer değiştirdi.` + (e.aborted_uav ? ` ${e.aborted_uav}'nin pili yetmediği için görevi iptal oldu.` : e.redirected_uav ? ` ${e.redirected_uav} rotasını değiştirdi.` : "");
-    case "value_change": return `↓ ${e.target} hedefinin önemi azaldı.`;
-    case "new_target": return `＋ Yeni hedef ortaya çıktı: ${e.target}.`;
-    case "preference_shift": return "⚖ Komuta merkezi öncelikleri değiştirdi.";
+    case "uav_crash": return `${e.uav} düştü.` + (e.released_target ? ` Gittiği ${e.released_target} hedefi boşta kaldı.` : "");
+    case "sensor_damage": return `${e.uav} drone'unun ${SENSOR_TR[e.sensor] || e.sensor} sensörü bozuldu.` + (e.aborted_uav ? ` Bu sensörü gerektiren ${e.released_target} görevi iptal oldu.` : "");
+    case "weather": return `Hava bozuldu: sensör verimi %${nf(100 * Math.min(...e.omega), 0)}–%${nf(100 * Math.max(...e.omega), 0)}.`;
+    case "target_move": return `${e.target} hedefi yer değiştirdi.` + (e.aborted_uav ? ` ${e.aborted_uav} artık yetişemediği için görevi iptal oldu.` : e.redirected_uav ? ` ${e.redirected_uav} rotasını değiştirdi.` : "");
+    case "value_change": return `${e.target} hedefinin değeri ${nf(e.value, 0)}'e düştü.`;
+    case "new_target": return `Yeni hedef ortaya çıktı: ${e.target}.`;
+    case "preference_shift": return "Komuta merkezi öncelikleri değiştirdi (yalnızca kaydedilir).";
   }
   return e.type;
 }
-const eventIcon = (e) => ({ uav_crash: "⚠", sensor_damage: "🔧", weather: "☁", target_move: "➜", value_change: "↓", new_target: "＋", preference_shift: "⚖" }[e.type] || "•");
-const eventTitle = (e) => ({ uav_crash: "Drone düştü", sensor_damage: "Sensör arızası", weather: "Hava bozuldu", target_move: "Hedef yer değiştirdi", value_change: "Hedefin önemi azaldı", new_target: "Yeni hedef", preference_shift: "Öncelik değişti" }[e.type] || e.type);
 function renderNarration() {
   const r = sim.sides[0].replay; if (!r || !$("nowText")) return;
   const t = Math.min(sim.t, r.tmax), u = r.uavs.map((_, i) => uavAt(r, i, t)), c = collectedAt(r, t);
   const n = (k) => u.filter((x) => x.act.kind === k).length;
   const dead = n("failed") + n("depleted");
-  $("nowText").innerHTML = sim.t >= r.tmax ? `<b>Görev bitti.</b> ${c.n}/${c.appeared} hedef gözlendi; görev ${mmss(r.metrics.makespan)} sürdü.`
+  $("nowText").innerHTML = sim.t >= r.tmax ? `<b>Görev bitti.</b> ${c.n}/${c.appeared} hedef gözlendi, toplanan değer ${pct(c.frac)}, görev süresi ${mmss(r.metrics.makespan)}.`
     : `<b>${n("transit")}</b> drone uçuyor, <b>${n("observe")}</b> gözlem yapıyor, <b>${n("idle")}</b> boşta${dead ? `, <b>${dead}</b> devre dışı` : ""}. ${c.n}/${c.appeared} hedef gözlendi.`;
   const items = [];
-  for (const e of r.events) if (e.time <= t) { const txt = eventSentence(e, r); if (txt) items.push({ time: e.time, txt }); }
-  for (const a of r.assignments) if (a.time <= t) items.push({ time: a.time, txt: `→ ${r.uavs[a.uav].id}, ${r.slotToId[a.slot]} hedefine gönderildi.` });
-  for (const tg of r.targets) if (tg.completed && tg.completion_time <= t) items.push({ time: tg.completion_time, txt: `✓ ${tg.id} gözlendi.` });
+  for (const e of r.events) if (e.time <= t) { const txt = eventSentence(e); if (txt) items.push({ time: e.time, txt }); }
+  for (const a of r.assignments) if (a.time <= t) items.push({ time: a.time, txt: `${r.uavs[a.uav].id} → ${r.slotToId[a.slot]} hedefine gönderildi.` });
+  for (const tg of r.targets) if (tg.completed && tg.completion_time <= t) items.push({ time: tg.completion_time, txt: `${tg.id} gözlendi (${nf(tg.collected_value, 1)} değer).` });
   items.sort((a, b) => b.time - a.time);
-  $("feed").innerHTML = items.slice(0, 40).map((it, k) => `<li class="${k < 3 ? "fresh" : ""}"><span class="muted">${mmss(it.time)}</span> ${esc(it.txt)}</li>`).join("") || "<li>Görev başlıyor…</li>";
+  $("feed").innerHTML = items.slice(0, 60).map((it, k) => `<li class="${k < 3 ? "fresh" : ""}"><span class="muted">${clock(it.time)}</span> ${esc(it.txt)}</li>`).join("") || "<li>Görev başlıyor…</li>";
 }
 function renderTicks() {
   const host = $("eventTicks"); host.innerHTML = "";
-  const r = activeSides().find((s) => s.replay)?.replay; if (!r) return;
+  const r = activeSides().find((s) => s.replay)?.replay;
+  if (!r) { $("tickLegend").innerHTML = ""; return; }
   const tmax = Math.max(...activeSides().map((s) => s.replay?.tmax || 0), 1);
-  const seen = new Set();
+  const seen = new Set(), types = new Set();
   for (const e of r.events) {
     if (e.effect !== "applied") continue;
-    const k = Math.round(e.time / 5) + e.type; if (seen.has(k)) continue; seen.add(k);
+    const k = Math.round(e.time / 5) + e.type; if (seen.has(k)) continue; seen.add(k); types.add(e.type);
     const b = document.createElement("button");
-    b.style.left = (100 * e.time / tmax) + "%"; b.textContent = eventIcon(e);
-    b.title = `${clock(e.time)} · ${eventTitle(e)} — tıklayın, o ana gidin`;
+    b.style.left = (100 * e.time / tmax) + "%"; b.style.background = css(EVENT_COLOR[e.type] || "--muted");
+    b.title = `${clock(e.time)} · ${EVENT_TR[e.type] || e.type}: tıklayınca o ana gider`;
     b.onclick = () => { stop(); sim.t = Math.max(0, e.time - 1); syncLastT(); drawAll(); };
     host.appendChild(b);
   }
+  $("tickLegend").innerHTML = types.size ? `<span class="sub">Olaylar (tıklanabilir):</span>` + [...types].map((ty) => `<span class="k"><span class="evdot" style="background:${css(EVENT_COLOR[ty] || "--muted")}"></span>${EVENT_TR[ty] || ty}</span>`).join("") : `<span class="sub">Bu görevde olay yok.</span>`;
 }
 
 // ---------- playback ----------
@@ -973,10 +872,10 @@ function syncLastT() { activeSides().forEach((s) => s.lastT = sim.t); }
 function clearToasts() { sim.sides.forEach((s) => { const b = $(`toasts${s.key}`); if (b) b.innerHTML = ""; }); }
 function toast(s, e) {
   const box = $(`toasts${s.key}`); if (!box) return;
-  const txt = eventSentence(e, s.replay); if (!txt) return;
+  const txt = eventSentence(e); if (!txt) return;
   const d = document.createElement("div");
-  d.className = "toast" + (e.type === "uav_crash" ? " crash" : e.type === "new_target" ? " good" : "");
-  d.textContent = txt;
+  d.className = "toast"; d.style.borderLeftColor = css(EVENT_COLOR[e.type] || "--warning");
+  d.textContent = `${clock(e.time)} · ${txt}`;
   box.prepend(d);
   while (box.children.length > 2) box.lastChild.remove();
   setTimeout(() => d.remove(), 5000);
@@ -993,7 +892,7 @@ function step(ts) {
     for (const e of s.replay.events) if (e.time > s.lastT && e.time <= sim.t && e.effect === "applied") { toast(s, e); fired = true; }
     s.lastT = sim.t;
   }
-  if (fired && $("pauseOnEvent").checked) sim.holdUntil = ts + 1800;
+  if (fired && $("pauseOnEvent").checked) sim.holdUntil = ts + 1500;
   drawAll(); renderVerdict();
   if (sim.playing) requestAnimationFrame(step);
 }
@@ -1001,126 +900,154 @@ function play() {
   const tmax = Math.max(...activeSides().map((s) => s.replay?.tmax || 0));
   if (!tmax) return;
   if (sim.t >= tmax) { sim.t = 0; syncLastT(); $("verdict").innerHTML = ""; }
-  sim.playing = true; sim.lastFrame = null; $("playBtn").textContent = "❚❚ Duraklat";
+  sim.playing = true; sim.lastFrame = null; $("playBtn").textContent = "Duraklat";
   requestAnimationFrame(step);
 }
 function stop() {
   sim.playing = false;
   const tmax = Math.max(...activeSides().map((s) => s.replay?.tmax || 0));
-  $("playBtn").textContent = tmax && sim.t >= tmax ? "▶ Tekrar izle" : sim.t > 0 ? "▶ Devam" : "▶ Başlat";
+  $("playBtn").textContent = tmax && sim.t >= tmax ? "Tekrar oynat" : sim.t > 0 ? "Devam" : "Başlat";
 }
 $("playBtn").onclick = () => sim.playing ? stop() : play();
 $("restartBtn").onclick = () => { stop(); sim.t = 0; syncLastT(); $("verdict").innerHTML = ""; clearToasts(); stop(); drawAll(); };
 $("tSlider").oninput = () => { stop(); sim.t = Number($("tSlider").value); syncLastT(); drawAll(); renderVerdict(); };
 $("showTrails").onchange = drawAll;
+$("showIds").onchange = drawAll;
 window.addEventListener("resize", drawAll);
 
-// ---------- verdict ----------
+// ---------- verdict (one rule: more collected value wins) ----------
 function renderVerdict() {
   const host = $("verdict");
   const sides = activeSides().filter((s) => s.replay);
   if (!sides.length || !sides.every((s) => sim.t >= s.replay.tmax)) { host.innerHTML = ""; return; }
   if (sides.length === 1) {
     const m = sides[0].replay.metrics;
-    host.innerHTML = `<div class="card verdict"><h3>Görev tamamlandı</h3>${m.n_completed}/${m.n_targets_appeared} hedef gözlendi, toplanan bilgi ${pct(m.value_fraction)}, görev süresi ${mmss(m.makespan)}.</div>`;
+    host.innerHTML = `<div class="card verdict"><h3>Görev tamamlandı</h3>${m.n_completed}/${m.n_targets_appeared} hedef gözlendi, toplanan değer ${pct(m.value_fraction)}, görev süresi ${mmss(m.makespan)}${m.n_critical ? `, kritik hedeflerin ${m.critical_on_time}/${m.n_critical} tanesi zamanında` : ""}.</div>`;
     return;
   }
   const [a, b] = sides, ma = a.replay.metrics, mb = b.replay.metrics;
-  const na = teamName(a), nb = teamName(b);
-  const dv = 100 * (ma.value_fraction - mb.value_fraction), dt = mb.makespan - ma.makespan, dn = ma.n_completed - mb.n_completed;
-  const aBetterValue = dv > 0.05, bBetterValue = dv < -0.05, aFaster = dt > 1, bFaster = dt < -1;
-  let title, text;
-  if ((aBetterValue || !bBetterValue) && (aFaster || !bFaster) && (aBetterValue || aFaster)) {
-    title = `🏆 Bu görevi ${na} kazandı`;
-  } else if ((bBetterValue || !aBetterValue) && (bFaster || !aFaster) && (bBetterValue || bFaster)) {
-    title = `🏆 Bu görevi ${nb} kazandı`;
-  } else if (!aBetterValue && !bBetterValue && !aFaster && !bFaster) {
-    title = "🤝 Berabere";
-  } else {
-    title = "⚖ Her ikisinin de üstün olduğu bir yan var";
-  }
-  const parts = [];
-  if (aBetterValue || bBetterValue) parts.push(`<b>${aBetterValue ? na : nb}</b> ${nf(Math.abs(dv), 1)} puan daha fazla bilgi topladı`);
-  if (aFaster || bFaster) parts.push(`<b>${aFaster ? na : nb}</b> görevi ${mmss(Math.abs(dt))} daha erken bitirdi`);
-  if (dn !== 0) parts.push(`<b>${dn > 0 ? na : nb}</b> ${Math.abs(dn)} hedef daha fazla gözledi`);
-  text = parts.length ? parts.join(", ") + "." : "İki yöntem bu görevde neredeyse aynı sonucu aldı.";
-  host.innerHTML = `<div class="card verdict"><h3>${title}</h3><div>${text}</div>
-    <div class="sub" style="margin-top:8px">Tek bir görevin sonucu şansa bağlı olabilir. 500 görevlik genel sonuç için <a href="#results">aşağıya bakın</a>.
-    Başka bir görev seçip tekrar deneyin!</div></div>`;
+  const la = `${teamName(a)} (${sourceLabel(a.source)})`, lb = `${teamName(b)} (${sourceLabel(b.source)})`;
+  const dv = 100 * (ma.value_fraction - mb.value_fraction);
+  const title = Math.abs(dv) < 0.1 ? "Berabere" : `Bu görevi ${dv > 0 ? teamName(a) : teamName(b)} kazandı`;
+  const rows = [
+    ["Toplanan değer", pct(ma.value_fraction), pct(mb.value_fraction)],
+    ["Gözlenen hedef", `${ma.n_completed} / ${ma.n_targets_appeared}`, `${mb.n_completed} / ${mb.n_targets_appeared}`],
+    ...(ma.n_critical ? [["Kritik hedef zamanında", `${ma.critical_on_time} / ${ma.n_critical}`, `${mb.critical_on_time} / ${mb.n_critical}`]] : []),
+    ["Görev süresi", mmss(ma.makespan), mmss(mb.makespan)],
+    ["Skor", nf(ma.weighted_score), nf(mb.weighted_score)],
+  ];
+  host.innerHTML = `<div class="card verdict"><h3>${title}${Math.abs(dv) >= 0.1 ? ` (${nf(Math.abs(dv), 1)} puan fark)` : ""}</h3>
+    <div class="sub" style="margin-bottom:8px">Kazanan, daha fazla değer toplayan taraftır.</div>
+    <div class="table-wrap"><table><thead><tr><th></th><th>${esc(la)}</th><th>${esc(lb)}</th></tr></thead><tbody>
+    ${rows.map(([k, x, y]) => `<tr><td>${k}</td><td>${x}</td><td>${y}</td></tr>`).join("")}</tbody></table></div>
+    <div class="sub" style="margin-top:8px">Tek görevin sonucu şansa bağlı olabilir; genel sonuç için <a href="#results">test sonuçlarına</a> bakın.</div></div>`;
 }
 
-// ===================================================================== RESULTS
+// ===================================================================== SUMMARY + RESULTS
 const charts = {};
+let results = null;
 async function loadResults() {
+  const id = envId;
   let res;
-  try { res = await getJSON("/api/results"); } catch (e) { return; }
-  if (res.status !== "ready") return;
+  try { res = await getJSON("/api/results?env=" + id); } catch (e) { res = { status: "error", error: e.message }; }
+  if (id !== envId) return;
+  results = res;
+  renderSummary(); renderResults();
+}
+function aiRow(res) { return res.methods.find((m) => m.method === res.ai_method); }
+function renderSummary() {
+  const host = $("summaryBody");
+  const res = results;
+  if (!res || res.status !== "ready") {
+    host.innerHTML = `<div class="card" style="margin-top:12px">Bu ortamın test sonuçları henüz üretilmedi. Eğitim ilerlemesi <a href="#learning">öğrenme eğrilerinde</a> ve <a href="#runs">eğitim koşularında</a> canlı izlenebilir.</div>`;
+    return;
+  }
   const by = Object.fromEntries(res.methods.map((m) => [m.method, m]));
-  const ai = by.ppo_entity;
-  const classic = ["greedy_nearest", "greedy_value_rate", "rh_rk"].map((m) => by[m]).filter(Boolean);
-  if (!ai || !classic.length) return;
-  const bestVal = classic.reduce((x, y) => (y.value_fraction > x.value_fraction ? y : x));
-  const bestTime = classic.reduce((x, y) => (y.makespan < x.makespan ? y : x));
-  const dv = 100 * (ai.value_fraction - bestVal.value_fraction), dt = bestTime.makespan - ai.makespan;
-  const lat = res.latency_ms || {};
-  const h = res.hypotheses || {};
-  // Simple view: three big statements and two 3-bar charts.
-  const simple = `
-    <div class="tiles simple-only" style="margin-bottom:14px">
-      <div class="card bigtile"><span class="ic">🎯</span><div><div class="v">${dv >= 0 ? "+" : ""}${nf(dv, 1)} puan</div>
-        <div class="t">Yapay zekâ ortalamada en iyi klasik yöntemden <b>${dv >= 0 ? "daha fazla" : "daha az"}</b> bilgi topluyor (${pct(ai.value_fraction)} – ${pct(bestVal.value_fraction)}).</div></div></div>
-      <div class="card bigtile"><span class="ic">⏱</span><div><div class="v">${dt >= 0 ? nf(dt, 0) + " sn erken" : nf(-dt, 0) + " sn geç"}</div>
-        <div class="t">Görevleri ortalamada ${dt >= 0 ? "daha erken" : "daha geç"} bitiriyor (${nf(ai.makespan / 60, 1)} dk – ${nf(bestTime.makespan / 60, 1)} dk).</div></div></div>
-      <div class="card bigtile"><span class="ic">⚡</span><div><div class="v">${lat.ppo_entity ? nf(lat.ppo_entity, 2) + " ms" : "–"}</div>
-        <div class="t">Bir kararı göz açıp kapayıncaya kadar veriyor${lat.rh_rk ? ` (planlayıcıdan ~${nf(lat.rh_rk / lat.ppo_entity, 0)} kat hızlı)` : ""}.</div></div></div>
-    </div>
-    <div class="card simple-only" style="margin-bottom:14px;font-size:15px">💬 <b>Kısaca:</b> Yapay zekâ klasik yöntemlerden <b>biraz ama tutarlı biçimde</b> daha iyi; fark 500 görevin genelinde istatistiksel olarak anlamlı.
-      Yine de her görevi kazanmıyor — simülasyonda farklı görevler deneyerek bunu kendiniz görebilirsiniz. Sonuçlar bilgisayar simülasyonuna aittir.</div>
-    <div class="grid simple-only">
-      <div class="card chart-card"><h3>Toplanan bilgi <span class="dir">↑ yüksek daha iyi</span></h3><div class="chart-box short"><canvas id="resValueS"></canvas></div></div>
-      <div class="card chart-card"><h3>Görev süresi <span class="dir">↓ kısa daha iyi</span></h3><div class="chart-box short"><canvas id="resTimeS"></canvas></div></div>
-    </div>
-    <div class="sub simple-only" style="margin-top:6px">"En iyi klasik yöntem": her ölçüt için o ölçütte en başarılı klasik yöntem alındı (bilgide ${esc(METHOD_TR[bestVal.method])}, sürede ${esc(METHOD_TR[bestTime.method])}). Yani yapay zekâ her ölçütte en güçlü rakibiyle karşılaştırılıyor.</div>`;
-  // Expert view: all methods and the hypothesis statements.
-  const claims = [];
-  if (h.H2_ppo_entity_ge_greedy_nearest) claims.push([h.H2_ppo_entity_ge_greedy_nearest.supported_superior, "H2 (hedef-odaklı ağ): klasik kurallardan anlamlı biçimde iyi (Holm düzeltmeli Wilcoxon, 500 senaryo, 5 tohum)."]);
-  if (h.H2_ppo_ge_greedy_nearest) claims.push([h.H2_ppo_ge_greedy_nearest.supported_superior, "H2 (düz MLP): klasik kuralları geçemedi."]);
-  const h3 = ["paper_S1", "paper_S2", "paper_S3"].map((k) => h[`H3_ppo_entity_${k}`]).filter(Boolean);
-  if (h3.length) claims.push([h3.every((x) => x.mean_meets_threshold), `H3: makale senaryolarının ${h3.filter((x) => x.mean_meets_threshold).length}/${h3.length} tanesinde RH-RK'ye %5 tolerans içinde.`]);
-  if (h.H4_ppo_entity_latency_ratio_rhrk_over_ppo) claims.push([h.H4_ppo_entity_supported, `H4: RH-RK / yapay zekâ karar süresi oranı ${nf(h.H4_ppo_entity_latency_ratio_rhrk_over_ppo, 0)}×.`]);
-  const expert = `
-    <div class="card expert-only" style="margin-bottom:14px"><ul class="claims">${claims.map(([ok, txt]) => `<li><span class="mark ${ok ? "ok" : "no"}">${ok ? "✓" : "✗"}</span><span>${txt}</span></li>`).join("")}</ul></div>
-    <div class="grid expert-only">
-      <div class="card chart-card"><h3>Toplanan değer oranı (tüm yöntemler)</h3><div class="chart-box tall"><canvas id="resValueE"></canvas></div></div>
-      <div class="card chart-card"><h3>Görev süresi (tüm yöntemler)</h3><div class="chart-box tall"><canvas id="resTimeE"></canvas></div></div>
-    </div>`;
-  $("resultsBody").innerHTML = simple + expert;
-  const three = [
-    { label: "Rastgele seçim", m: by.random, color: css("--axis") },
-    { label: "En iyi klasik yöntem", m: bestVal, color: css("--rule") },
-    { label: "Yapay zekâ", m: ai, color: css("--ai") },
-  ].filter((x) => x.m);
-  const threeT = three.map((x) => x.label === "En iyi klasik yöntem" ? { ...x, m: bestTime } : x);
-  makeBar("resValueS", three.map((x) => x.label), three.map((x) => 100 * x.m.value_fraction), three.map((x) => x.color), (v) => "%" + nf(v, 1), "%");
-  makeBar("resTimeS", threeT.map((x) => x.label), threeT.map((x) => x.m.makespan / 60), threeT.map((x) => x.color), (v) => nf(v, 1) + " dk", " dk");
+  const ai = aiRow(res), near = by.greedy_nearest;
+  const classic = CLASSIC.map((m) => by[m]).filter(Boolean);
+  if (!ai || !classic.length) { host.innerHTML = ""; return; }
+  const best = classic.reduce((x, y) => (y.value_fraction > x.value_fraction ? y : x));
+  const w = res.wins || {};
+  const dNear = 100 * (ai.value_fraction - near.value_fraction), rNear = ai.value_fraction / near.value_fraction - 1;
+  const dBest = 100 * (ai.value_fraction - best.value_fraction), rBest = ai.value_fraction / best.value_fraction - 1;
+  const winTxt = (m) => w[m] ? `${w[m].n} test görevinin ${w[m].wins} tanesinde önde (${w[m].ties} beraberlik)` : "";
+  const nTest = ai.n_scenarios;
+  const tiles = [
+    `<div class="card kpi hl"><div class="label">Yapay zekâ: toplanan değer</div><div class="value">${pct(ai.value_fraction)}</div><div class="note">${nTest} test görevinin ortalaması, ${ai.n_seeds} bağımsız eğitim (tohum); tohumlar arası yayılım ±${nf(100 * (ai.value_fraction_spread || 0), 2)} puan</div></div>`,
+    `<div class="card kpi"><div class="label">Klasik: en yakın hedef kuralına göre</div><div class="value ${dNear >= 0 ? "good-t" : "bad-t"}">${signed(dNear)} puan</div><div class="note">göreli ${signed(100 * rNear, 0)}% (${pct(near.value_fraction)} yerine ${pct(ai.value_fraction)}). ${winTxt("greedy_nearest")}.</div></div>`,
+    `<div class="card kpi"><div class="label">En güçlü klasik yönteme göre (${esc(METHOD_TR[best.method])})</div><div class="value ${dBest >= 0 ? "good-t" : "bad-t"}">${signed(dBest)} puan</div><div class="note">göreli ${signed(100 * rBest, 0)}%. ${winTxt(best.method)}.</div></div>`,
+  ];
+  if (ai.critical_on_time_rate != null && near.critical_on_time_rate != null) {
+    tiles.push(`<div class="card kpi"><div class="label">Kritik hedeflerin zamanında gözlenmesi</div><div class="value">${pct(ai.critical_on_time_rate, 0)}</div><div class="note">en yakın hedef kuralı: ${pct(near.critical_on_time_rate, 0)}, ${esc(METHOD_TR[best.method])}: ${pct(best.critical_on_time_rate, 0)}</div></div>`);
+  } else if (res.latency_ms?.[res.ai_method]) {
+    const lat = res.latency_ms;
+    tiles.push(`<div class="card kpi"><div class="label">Karar süresi (yapay zekâ)</div><div class="value">${nf(lat[res.ai_method], 2)} ms</div><div class="note">planlayıcı RH-RK: ${nf(lat.rh_rk, 1)} ms; en yakın hedef: ${nf(lat.greedy_nearest, 3)} ms</div></div>`);
+  }
+  const strong = rNear >= 0.1;
+  const line = dBest > 0
+    ? `Yapay zekâ bu ortamda bütün klasik yöntemlerden fazla değer topluyor${strong ? " ve fark belirgin" : "; fark küçük ama tutarlı"}.`
+    : `Yapay zekâ bu ortamda en güçlü klasik yöntemi geçemiyor.`;
+  host.innerHTML = `<div class="kpis">${tiles.join("")}</div><div class="verdict-line">${line} Ayrıntı ve istatistik testleri: <a href="#results">test sonuçları</a>.</div>`;
+}
+function renderResults() {
+  const res = results;
+  if (!res || res.status !== "ready") {
+    $("resultsBody").innerHTML = `<div class="card empty">${esc(env().title)} için test sonuçları henüz yok.</div>`;
+    return;
+  }
+  const by = Object.fromEntries(res.methods.map((m) => [m.method, m]));
   const ms = METHOD_ORDER.map((m) => by[m]).filter(Boolean);
-  const col = ms.map((m) => m.method === "ppo_entity" ? css("--ai") : m.method === "ppo" ? css("--series-3") : css("--axis"));
-  makeBar("resValueE", ms.map((m) => METHOD_TR[m.method]), ms.map((m) => 100 * m.value_fraction), col, (v) => "%" + nf(v, 1), "%");
-  makeBar("resTimeE", ms.map((m) => METHOD_TR[m.method]), ms.map((m) => m.makespan / 60), col, (v) => nf(v, 1) + " dk", " dk");
+  const ai = aiRow(res);
+  const hasCrit = ms.some((m) => m.critical_on_time_rate != null);
+  const v2 = isV2();
+  const table = `<div class="card table-wrap"><table><thead><tr><th>Yöntem</th><th class="num">Tohum</th><th class="num">Toplanan değer</th>${v2 ? "" : '<th class="num">Skor J</th>'}<th class="num">Görev süresi</th><th class="num">Tamamlanan hedef</th>${hasCrit ? '<th class="num">Kritik zamanında</th>' : ""}<th class="num">Karar süresi</th></tr></thead><tbody>
+    ${ms.map((m) => `<tr class="${m === ai ? "ai-row" : ""}"><td>${esc(METHOD_TR[m.method] || m.method)}</td><td class="num">${m.n_seeds || "–"}</td>
+      <td class="num">${pct(m.value_fraction, 2)}${m.value_fraction_spread ? ` <span class="muted">±${nf(100 * m.value_fraction_spread, 2)}</span>` : ""}</td>
+      ${v2 ? "" : `<td class="num">${nf(m.weighted_score, 4)}</td>`}<td class="num">${nf(m.makespan / 60, 1)} dk</td><td class="num">${pct(m.completion_rate, 1)}</td>
+      ${hasCrit ? `<td class="num">${pct(m.critical_on_time_rate, 1)}</td>` : ""}<td class="num">${res.latency_ms?.[m.method] != null ? nf(res.latency_ms[m.method], 3) + " ms" : "–"}</td></tr>`).join("")}
+    </tbody></table><div class="sub" style="margin-top:6px">${ai ? ai.n_scenarios : ""} test görevi; ± = bağımsız eğitim tohumları arasındaki standart sapma. Rastgele ve RH-RK birden çok tekrarla değerlendirildi.</div></div>`;
+  const w = res.wins || {};
+  const wins = Object.keys(w).length ? `<div class="card table-wrap" style="margin-top:14px"><h3 style="margin:0 0 6px;font-size:16px">Görev görev karşılaştırma (toplanan değer)</h3><table><thead><tr><th>Rakip</th><th class="num">Yapay zekâ önde</th><th class="num">Beraberlik</th><th class="num">Rakip önde</th><th>Dağılım</th></tr></thead><tbody>
+    ${Object.values(w).map((x) => `<tr><td>${esc(METHOD_TR[x.rival])}</td><td class="num">${x.wins}</td><td class="num">${x.ties}</td><td class="num">${x.losses}</td>
+      <td><span class="bar" style="width:220px"><span style="width:${100 * x.wins / x.n}%;background:var(--ai)"></span></span> <span class="sub">%${nf(100 * x.wins / x.n, 0)}</span></td></tr>`).join("")}</tbody></table></div>` : "";
+  $("resultsBody").innerHTML = table + wins + claimsHtml(res) + `
+    <div class="grid" style="margin-top:14px">
+      <div class="card chart-card"><h3>Toplanan değer <span class="dir">yüksek daha iyi</span></h3><div class="chart-box tall"><canvas id="resValue"></canvas></div></div>
+      <div class="card chart-card"><h3>Görev süresi <span class="dir">kısa daha iyi</span></h3><div class="chart-box tall"><canvas id="resTime"></canvas></div></div>
+    </div>`;
+  const col = ms.map((m) => m === ai ? css("--ai") : m.method.startsWith("ppo") ? css("--series-3") : m.method === "greedy_nearest" ? css("--rule") : css("--axis"));
+  makeBar("resValue", ms.map((m) => METHOD_TR[m.method] || m.method), ms.map((m) => 100 * m.value_fraction), col, (v) => "%" + nf(v, 1), "%");
+  makeBar("resTime", ms.map((m) => METHOD_TR[m.method] || m.method), ms.map((m) => m.makespan / 60), col, (v) => nf(v, 1) + " dk", " dk");
+}
+function claimsHtml(res) {
+  const h = res.hypotheses || {}, ai = res.ai_method, out = [];
+  const fmtC = (c) => `fark ${signed(100 * c.mean_diff, 2)} puan, %95 GA [${signed(100 * c.ci[0], 2)}; ${signed(100 * c.ci[1], 2)}], Holm p = ${c.p_holm.toExponential(1)}`;
+  for (const b of ["greedy_nearest", "greedy_value_rate", "rh_rk"]) {
+    const c = h[`H2_${ai}_ge_${b}`] || h[`CMP_${ai}_vs_${b}`];
+    if (c) out.push([c.supported_superior, `${METHOD_TR[ai]} > ${METHOD_TR[b]}: ${fmtC(c)}${isV2() ? "" : " (skor J üzerinden)"}`]);
+  }
+  if (!isV2()) {
+    const h3 = ["paper_S1", "paper_S2", "paper_S3"].map((k) => h[`H3_${ai}_${k}`]).filter(Boolean);
+    if (h3.length) out.push([h3.every((x) => x.mean_meets_threshold), `Makale senaryolarında (S1–S3) RH-RK'ye %5 tolerans içinde: ${h3.filter((x) => x.mean_meets_threshold).length}/${h3.length}.`]);
+    if (h[`H4_${ai}_latency_ratio_rhrk_over_ppo`]) out.push([h[`H4_${ai}_supported`], `Karar süresi: RH-RK, yapay zekâdan ${nf(h[`H4_${ai}_latency_ratio_rhrk_over_ppo`], 0)} kat yavaş.`]);
+  }
+  if (!out.length) return "";
+  return `<div class="card" style="margin-top:14px"><h3 style="margin:0 0 8px;font-size:16px">İstatistik testleri</h3><ul class="claims">${out.map(([ok, txt]) => `<li><span class="badge ${ok ? "ok" : "no"}">${ok ? "Anlamlı" : "Anlamlı değil"}</span><span>${esc(txt)}</span></li>`).join("")}</ul></div>`;
 }
 function makeBar(id, labels, values, colors, fmt, unit) {
   if (charts[id]) charts[id].destroy();
+  if (!$(id)) return;
   charts[id] = new Chart($(id), {
     type: "bar",
     data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, barPercentage: 0.7 }] },
     plugins: [{ id: "barLabels", afterDatasetsDraw(c) {
-      const { ctx } = c; ctx.save(); ctx.font = "bold 13px system-ui"; ctx.fillStyle = css("--text-primary"); ctx.textBaseline = "middle";
+      const { ctx } = c; ctx.save(); ctx.font = "bold 12.5px system-ui"; ctx.fillStyle = css("--text-primary"); ctx.textBaseline = "middle";
       c.getDatasetMeta(0).data.forEach((b, i) => ctx.fillText(fmt(values[i]), b.x + 6, b.y)); ctx.restore(); } }],
     options: {
-      indexAxis: "y", animation: false, responsive: true, maintainAspectRatio: false, layout: { padding: { right: 70 } },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (it) => fmt(it.parsed.x) + " · 500 görevin ortalaması" } } },
+      indexAxis: "y", animation: false, responsive: true, maintainAspectRatio: false, layout: { padding: { right: 64 } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (it) => fmt(it.parsed.x) + " (test görevleri ortalaması)" } } },
       scales: { x: { beginAtZero: true, grid: { color: css("--grid") }, ticks: { color: css("--muted"), callback: (v) => nf(v, 0) + unit } },
-                y: { grid: { display: false }, ticks: { color: css("--text-primary"), font: { size: 13 } } } },
+                y: { grid: { display: false }, ticks: { color: css("--text-primary"), font: { size: 12.5 } } } },
     },
   });
 }
@@ -1128,24 +1055,23 @@ function makeBar(id, labels, values, colors, fmt, unit) {
 // ===================================================================== LEARNING
 const groupSeries = {};
 const LEARN = [
-  { key: "value_fraction", title: "Toplanan bilgi", dir: "↑ yüksek daha iyi", map: (v) => 100 * v, fmt: (v) => "%" + nf(v, 1), higher: true },
-  { key: "makespan", title: "Görev süresi", dir: "↓ kısa daha iyi", map: (v) => v / 60, fmt: (v) => nf(v, 1) + " dk", higher: false },
+  { key: "value_fraction", title: "Toplanan değer (doğrulama)", dir: "yüksek daha iyi", map: (v) => 100 * v, fmt: (v) => "%" + nf(v, 1) },
+  { key: "makespan", title: "Görev süresi (doğrulama)", dir: "kısa daha iyi", map: (v) => v / 60, fmt: (v) => nf(v, 1) + " dk" },
 ];
-const BASE_NAMES = { greedy_nearest: { label: "Klasik: en yakın", dash: [6, 4] }, greedy_value_rate: { label: "Klasik: değer÷süre", dash: [2, 3] }, rh_rk: { label: "Klasik: planlayıcı", dash: [10, 3, 2, 3] } };
+const BASE_NAMES = { greedy_nearest: { label: "en yakın hedef", dash: [6, 4] }, greedy_value_rate: { label: "değer ÷ süre", dash: [2, 3] }, rh_rk: { label: "planlayıcı RH-RK", dash: [10, 3, 2, 3] } };
 function buildLearning() {
   $("learnCharts").innerHTML = LEARN.map((s) => `
     <div class="card chart-card"><h3>${s.title} <span class="dir">${s.dir}</span></h3>
-      <div class="chart-box tall"><canvas id="learn_${s.key}"></canvas></div><div class="insight" id="insight_${s.key}"></div></div>`).join("");
-  for (const s of LEARN) charts["learn_" + s.key] = lineChart($(`learn_${s.key}`), s.fmt, "eğitim adımı (oynanan karar sayısı)");
-  charts.learnSimple = lineChart($("learnSimple"), (v) => "%" + nf(v, 0), "eğitim sırasında oynanan karar sayısı");
-  charts.learnSimple.options.scales.x.ticks.callback = (v) => words(v);
+      <div class="chart-box tall"><canvas id="learn_${s.key}"></canvas></div><div class="insight" id="insight_${s.key}">Veriler yükleniyor…</div></div>`).join("");
+  for (const s of LEARN) charts["learn_" + s.key] = lineChart($(`learn_${s.key}`), s.fmt, "eğitim adımı (verilen karar sayısı)");
 }
 async function pollGroups() {
-  for (const g of ["ppo_entity", "ppo_default"]) {
+  const id = envId;
+  for (const g of env().groups) {
     const runs = state.runs.filter((r) => r.group === g);
     groupSeries[g] = (await Promise.all(runs.map((r) => getJSON("/api/run?name=" + encodeURIComponent(r.name)).catch(() => null)))).filter(Boolean);
   }
-  updateLearning();
+  if (id === envId) updateLearning();
 }
 function groupCurve(g, key, map) {
   const byX = new Map();
@@ -1154,43 +1080,39 @@ function groupCurve(g, key, map) {
     r.validation.timesteps.forEach((x, i) => { const y = r.validation[key][i]; if (x != null && y != null) own.set(Math.round(x / 1e5) * 1e5, map(y)); });
     for (const [xs, y] of own) (byX.get(xs) || byX.set(xs, []).get(xs)).push(y);
   }
-  return [...byX.entries()].sort((a, b) => a[0] - b[0]).map(([x, ys]) => ({ x, y: ys.reduce((a, b) => a + b, 0) / ys.length, lo: Math.min(...ys), hi: Math.max(...ys) }));
+  return [...byX.entries()].sort((a, b) => a[0] - b[0]).map(([x, ys]) => ({ x, y: ys.reduce((a, b) => a + b, 0) / ys.length, lo: Math.min(...ys), hi: Math.max(...ys), n: ys.length }));
 }
 function updateLearning() {
-  // simple chart: AI vs the best classic method only
-  const sc = charts.learnSimple;
-  if (sc) {
-    const ent = groupCurve("ppo_entity", "value_fraction", (v) => 100 * v), b = bestBaseline("value_fraction", true);
-    const ds = [];
-    if (ent.length) ds.push({ label: "🤖 Yapay zekâ", data: ent.map((p) => ({ x: p.x, y: p.y })), borderColor: css("--ai"), backgroundColor: css("--ai"), borderWidth: 3, endLabel: "🤖 Yapay zekâ" });
-    if (b && ent.length) ds.push({ label: "📏 En iyi klasik yöntem", isBaseline: true, data: [{ x: 0, y: 100 * b.v }, { x: ent[ent.length - 1].x, y: 100 * b.v }], borderColor: css("--rule"), borderDash: [6, 4], borderWidth: 2, endLabel: "📏 Klasik yöntem" });
-    sc.data.datasets = ds; sc.update("none");
-    const box = $("learnSimpleInsight");
-    if (ent.length && b) {
-      const cross = ent.find((p) => p.y >= 100 * b.v);
-      const last = ent[ent.length - 1].y, d = last - 100 * b.v;
-      box.innerHTML = cross
-        ? `💡 Yapay zekâ başlangıçta klasik yöntemin <b>gerisindeydi</b> (%${nf(ent[0].y, 0)}). Yaklaşık <b>${words(cross.x)} karar</b> oynadıktan sonra onu <b>geçti</b> ve eğitimin sonunda ${nf(d, 1)} puan önde bitirdi.`
-        : `💡 Yapay zekâ şimdilik klasik yöntemin ${nf(-d, 1)} puan gerisinde; eğitim sürüyorsa çizgi yükselmeye devam edebilir.`;
-    }
-  }
-  // expert charts: both architectures and all baselines
+  const bl = curBaselines();
+  const colors = [css("--ai"), css("--series-3"), css("--series-5")];
   for (const s of LEARN) {
     const c = charts["learn_" + s.key]; if (!c) continue;
     const ds = []; let xmax = 1;
-    const colors = { ppo_entity: css("--ai"), ppo_default: css("--series-3") };
-    for (const g of ["ppo_entity", "ppo_default"]) {
-      const pts = groupCurve(g, s.key, s.map); if (!pts.length) continue;
+    env().groups.forEach((g, gi) => {
+      const pts = groupCurve(g, s.key, s.map); if (!pts.length) return;
       xmax = Math.max(xmax, pts[pts.length - 1].x);
-      ds.push({ label: `${GROUP_TR[g]} (${(groupSeries[g] || []).length} tohum ort.)`, data: pts.map((p) => ({ x: p.x, y: p.y })), borderColor: colors[g], backgroundColor: colors[g], endLabel: g === "ppo_entity" ? "hedef-odaklı" : "düz ağ (MLP)" });
+      const color = colors[gi % colors.length];
+      ds.push({ label: `${GROUP_TR[g] || g} (${(groupSeries[g] || []).length} tohum)`, data: pts.map((p) => ({ x: p.x, y: p.y })), borderColor: color, backgroundColor: color, borderWidth: gi === 0 ? 3 : 2, endLabel: (GROUP_TR[g] || g).replace("Yapay zekâ: ", "") });
       ds.push({ label: "_band", data: pts.map((p) => ({ x: p.x, y: p.hi })), borderWidth: 0, pointRadius: 0, fill: false, isBand: true });
-      ds.push({ label: "_band", data: pts.map((p) => ({ x: p.x, y: p.lo })), borderWidth: 0, pointRadius: 0, fill: "-1", backgroundColor: colors[g] + "33", isBand: true });
-    }
-    if (baselines?.methods) for (const [m, st] of Object.entries(BASE_NAMES)) {
-      const v = baselines.methods[m]?.[s.key]; if (v == null) continue;
-      ds.push({ label: st.label, isBaseline: true, data: [{ x: 0, y: s.map(v) }, { x: xmax, y: s.map(v) }], borderColor: css("--muted"), borderDash: st.dash, borderWidth: 1.5, endLabel: st.label });
+      ds.push({ label: "_band", data: pts.map((p) => ({ x: p.x, y: p.lo })), borderWidth: 0, pointRadius: 0, fill: "-1", backgroundColor: color + "33", isBand: true });
+    });
+    if (bl?.methods) for (const [m, st] of Object.entries(BASE_NAMES)) {
+      const v = bl.methods[m]?.[s.key]; if (v == null) continue;
+      ds.push({ label: "Klasik: " + st.label, isBaseline: true, data: [{ x: 0, y: s.map(v) }, { x: xmax, y: s.map(v) }], borderColor: m === "greedy_nearest" ? css("--rule") : css("--muted"), borderDash: st.dash, borderWidth: 1.5, endLabel: st.label });
     }
     c.data.datasets = ds; c.update("none");
+    const box = $(`insight_${s.key}`); if (!box) continue;
+    const main = groupCurve(env().ai_group, s.key, s.map);
+    if (!main.length) { box.textContent = "Bu ortam için henüz doğrulama sonucu yok."; continue; }
+    const last = main[main.length - 1], bestP = s.key === "makespan" ? main.reduce((a, b) => (b.y < a.y ? b : a)) : main.reduce((a, b) => (b.y > a.y ? b : a));
+    const near = bl?.methods?.greedy_nearest?.[s.key];
+    if (near == null) { box.textContent = `Son ölçüm (${steps(last.x)} adım): ${s.fmt(last.y)}.`; continue; }
+    const nv = s.map(near), better = s.key === "makespan" ? (y) => y < nv : (y) => y > nv;
+    const cross = main.find((p) => better(p.y));
+    const diff = s.key === "makespan" ? nv - last.y : last.y - nv;
+    box.innerHTML = `Son ölçüm (${steps(last.x)} adım, ${last.n} tohum ortalaması): <b>${s.fmt(last.y)}</b>; en yakın hedef kuralı ${s.fmt(nv)}. `
+      + (cross ? `Yapay zekâ kuralı ${steps(cross.x)} adımda geçti; şu an fark ${s.key === "makespan" ? nf(diff, 1) + " dk" : signed(diff) + " puan"}. En iyi ölçüm ${s.fmt(bestP.y)} (${steps(bestP.x)} adım).`
+               : `Yapay zekâ henüz kuralı geçmedi.`);
   }
 }
 
@@ -1224,7 +1146,7 @@ function lineChart(canvas, fmt, xTitle = "eğitim adımı") {
     type: "line", data: { datasets: [] }, plugins: [endLabels, crosshair],
     options: {
       animation: false, responsive: true, maintainAspectRatio: false, parsing: false,
-      layout: { padding: { right: 130 } }, interaction: { mode: "index", intersect: false },
+      layout: { padding: { right: 125 } }, interaction: { mode: "index", intersect: false },
       elements: { line: { borderWidth: 2, tension: 0.2 }, point: { radius: 0, hoverRadius: 4, hitRadius: 8 } },
       scales: {
         x: { type: "linear", grid: { color: css("--grid") }, border: { color: css("--axis") }, ticks: { color: css("--muted"), callback: (v) => steps(v), maxTicksLimit: 6 }, title: { display: true, text: xTitle, color: css("--muted") } },
@@ -1232,30 +1154,30 @@ function lineChart(canvas, fmt, xTitle = "eğitim adımı") {
       },
       plugins: {
         legend: { position: "bottom", labels: { color: css("--text-secondary"), boxWidth: 14, boxHeight: 2, font: { size: 12 }, filter: (it, d) => !d.datasets[it.datasetIndex].isBand } },
-        tooltip: { filter: (it) => !it.dataset.isBaseline && !it.dataset.isBand,
-          callbacks: { title: (it) => it.length ? `${Math.round(it[0].parsed.x).toLocaleString("tr-TR")} karar sonra` : "", label: (it) => `${it.dataset.label}: ${fmt(it.parsed.y)}` } },
+        tooltip: { filter: (it) => !it.dataset.isBand,
+          callbacks: { title: (it) => it.length ? `${Math.round(it[0].parsed.x).toLocaleString("tr-TR")} adım` : "", label: (it) => `${it.dataset.label}: ${fmt(it.parsed.y)}` } },
       },
     },
   });
 }
 
-// ===================================================================== EXPERT (training details)
+// ===================================================================== RUNS (training details)
 let selected = null;
 const compare = new Set();
 const series = {};
 const expertCharts = {};
 const STATUS_TR = { running: "Çalışıyor", done: "Bitti", stopped: "Durdu / sırada" };
 const PERF = [
-  { key: "weighted_score", title: "Ağırlıklı skor J", dir: "yüksek daha iyi", digits: 3, explain: "0,5 × değer oranı − 0,5 × görev süresi / 2400 s." },
-  { key: "value_fraction", title: "Toplanan değer oranı", dir: "yüksek daha iyi", digits: 3, explain: "Gözlenen hedeflerin beklenen değeri / tüm hedeflerin değeri." },
-  { key: "makespan", title: "Makespan (s)", dir: "düşük daha iyi", digits: 0, explain: "Son gözlemin bittiği an." },
+  { key: "weighted_score", title: "Doğrulama skoru", dir: "yüksek daha iyi", digits: 3, explain: "Ortamın skoru (v1: J, v2: toplanan değer oranı); en iyi model buna göre seçilir." },
+  { key: "value_fraction", title: "Toplanan değer oranı", dir: "yüksek daha iyi", digits: 3, explain: "Gözlenen hedeflerin beklenen değeri / bütün hedeflerin değeri." },
+  { key: "makespan", title: "Görev süresi (s)", dir: "düşük daha iyi", digits: 0, explain: "Son gözlemin bittiği an." },
 ];
 const DIAG = [
-  { key: "rollout/ep_rew_mean", title: "Ortalama bölüm ödülü", dir: "yüksek daha iyi", digits: 3, explain: "Keşif yapan politikanın son 100 bölümdeki ortalama getirisi." },
-  { key: "train/entropy_loss", title: "Entropi kaybı (−entropi)", dir: "0'a yaklaşır", digits: 2, explain: "Politikanın kararsızlığı; ani çöküş erken ezberi gösterir." },
-  { key: "train/explained_variance", title: "Açıklanan varyans", dir: "1'e yakın iyi", digits: 2, explain: "Değer ağının getiriyi tahmin başarısı." },
-  { key: "train/approx_kl", title: "Yaklaşık KL", dir: "~0,01–0,03", digits: 4, explain: "Her güncellemede politikanın değişimi." },
-  { key: "train/clip_fraction", title: "Kırpma oranı", dir: "~0,1–0,3", digits: 3, explain: "PPO'nun sınırladığı örneklerin oranı." },
+  { key: "rollout/ep_rew_mean", title: "Ortalama bölüm ödülü", dir: "yüksek daha iyi", digits: 3, explain: "Keşif yapan (rastgele örnekleyen) politikanın son 100 bölümdeki getirisi." },
+  { key: "train/entropy_loss", title: "Entropi kaybı (−entropi)", dir: "0'a yaklaşır", digits: 2, explain: "Kararların belirsizliği; ani çöküş erken ezberlemeye işaret eder." },
+  { key: "train/explained_variance", title: "Açıklanan varyans", dir: "1'e yakın iyi", digits: 2, explain: "Değer ağının getiriyi ne kadar iyi tahmin ettiği." },
+  { key: "train/approx_kl", title: "Yaklaşık KL", dir: "yaklaşık 0,01–0,03", digits: 4, explain: "Her güncellemede politikanın ne kadar değiştiği." },
+  { key: "train/clip_fraction", title: "Kırpma oranı", dir: "yaklaşık 0,1–0,3", digits: 3, explain: "PPO'nun sınırladığı örneklerin oranı." },
   { key: "train/value_loss", title: "Değer kaybı", dir: "düşük daha iyi", digits: 4, explain: "Değer ağının tahmin hatası." },
 ];
 function colorFor(name) { const order = [selected, ...compare].filter(Boolean); return css(`--series-${Math.min(order.indexOf(name), 2) + 1}`); }
@@ -1274,15 +1196,18 @@ function runPoints(name, c) {
   if (c.prefix === "perf:") return s.validation.timesteps.map((x, i) => ({ x, y: s.validation[c.spec.key][i] })).filter((p) => p.x != null && p.y != null);
   return s.progress["time/total_timesteps"].map((x, i) => ({ x, y: s.progress[c.spec.key][i] })).filter((q) => q.x != null && q.y != null);
 }
+function runEnv(r) { return envs.find((e) => e.groups.includes(r.group))?.id || "v1"; }
 function updateExpertCharts() {
   const names = [selected, ...compare].filter(Boolean);
+  const run = state.runs.find((r) => r.name === selected);
+  const bl = baselines[run ? runEnv(run) : envId];
   for (const c of Object.values(expertCharts)) {
-    const ds = names.map((n) => ({ label: n, data: runPoints(n, c), borderColor: colorFor(n), backgroundColor: colorFor(n), endLabel: n.replace("_seed", " s") }));
-    if (c.prefix === "perf:" && baselines?.methods) {
+    const ds = names.map((n) => ({ label: n, data: runPoints(n, c), borderColor: colorFor(n), backgroundColor: colorFor(n), endLabel: n.replace("_seed", " t") }));
+    if (c.prefix === "perf:" && bl?.methods) {
       const xmax = Math.max(1, ...ds.flatMap((d) => d.data.map((p) => p.x)));
       for (const [m, st] of Object.entries(BASE_NAMES)) {
-        const v = baselines.methods[m]?.[c.spec.key]; if (v == null) continue;
-        ds.push({ label: st.label, isBaseline: true, data: [{ x: 0, y: v }, { x: xmax, y: v }], borderColor: css("--muted"), borderDash: st.dash, borderWidth: 1.5, endLabel: st.label });
+        const v = bl.methods[m]?.[c.spec.key]; if (v == null) continue;
+        ds.push({ label: "Klasik: " + st.label, isBaseline: true, data: [{ x: 0, y: v }, { x: xmax, y: v }], borderColor: css("--muted"), borderDash: st.dash, borderWidth: 1.5, endLabel: st.label });
       }
     }
     c.chart.data.datasets = ds; c.chart.update("none");
@@ -1294,68 +1219,88 @@ async function pollSeries() {
   updateExpertCharts();
 }
 function tile(label, value, note = "") { return `<div class="card tile"><div class="label">${label}</div><div class="value">${value}</div><div class="note">${note}</div></div>`; }
-function renderExpert() {
-  const runs = state.runs;
-  if (!selected && runs.length) selected = (runs.find((r) => r.status === "running") || runs[runs.length - 1]).name;
+function renderRuns() {
+  const all = $("allRuns").checked;
+  const runs = state.runs.filter((r) => all || env().groups.includes(r.group));
+  if ((!selected || !runs.some((r) => r.name === selected)) && runs.length) selected = (runs.find((r) => r.status === "running") || runs.find((r) => r.group === env().ai_group) || runs[0]).name;
   const running = runs.filter((r) => r.status === "running");
   $("overview").innerHTML = tile("Çalışan koşu", `${running.length} / ${runs.length}`, running.map((r) => r.name).join(", ") || "şu an çalışan yok") +
     tile("Tamamlanan eğitim adımı", steps(runs.reduce((a, r) => a + (r.timesteps || 0), 0)), `planlanan ${steps(runs.reduce((a, r) => a + (r.total_timesteps || 0), 0))}`) +
-    tile("Kalan süre (çalışanlar)", dur(running.length ? Math.max(...running.map((r) => r.eta_s || 0)) : null), "sıradakiler hariç");
+    tile("Kalan süre (çalışanlar)", dur(running.length ? Math.max(...running.map((r) => r.eta_s || 0)) : null), "sıradaki koşular hariç");
   $("runRows").innerHTML = runs.map((r) => {
     const p = r.total_timesteps ? Math.min(100, 100 * r.timesteps / r.total_timesteps) : 0;
     const sw = (r.name === selected || compare.has(r.name)) ? `<span class="swatch" style="background:${colorFor(r.name)}"></span>` : "";
     return `<tr data-name="${r.name}" class="${r.name === selected ? "selected" : ""}">
       <td><input type="checkbox" data-cmp="${r.name}" ${compare.has(r.name) ? "checked" : ""} ${r.name === selected ? "disabled" : ""}></td>
       <td>${sw}${r.name}</td><td>${r.policy}</td><td><span class="status ${r.status}"><span class="dot"></span>${STATUS_TR[r.status]}</span></td>
-      <td><span class="bar"><span style="width:${p}%"></span></span> ${nf(p, 0)}%</td><td>${r.fps ? nf(r.fps, 0) + " adım/sn" : "–"}</td>
-      <td>${dur(r.elapsed_s)}</td><td>${r.status === "running" ? dur(r.eta_s) : "–"}</td>
-      <td>${nf(r.best_validation_score)}${r.best_validation_step != null ? ` <span class="muted">@ ${steps(r.best_validation_step)}</span>` : ""}</td></tr>`;
-  }).join("") || '<tr><td colspan="9" class="empty">Henüz koşu yok.</td></tr>';
-  $("runRows").querySelectorAll("tr[data-name]").forEach((tr) => tr.onclick = (ev) => { if (ev.target.matches("input")) return; selected = tr.dataset.name; compare.delete(selected); renderExpert(); pollSeries(); });
+      <td><span class="bar"><span style="width:${p}%"></span></span> ${nf(p, 0)}%</td><td class="num">${r.fps ? nf(r.fps, 0) + " adım/sn" : "–"}</td>
+      <td class="num">${dur(r.elapsed_s)}</td><td class="num">${r.status === "running" ? dur(r.eta_s) : "–"}</td>
+      <td class="num">${nf(r.best_validation_score)}${r.best_validation_step != null ? ` <span class="muted">(${steps(r.best_validation_step)})</span>` : ""}</td></tr>`;
+  }).join("") || '<tr><td colspan="9" class="empty">Bu ortam için henüz koşu yok.</td></tr>';
+  $("runRows").querySelectorAll("tr[data-name]").forEach((tr) => tr.onclick = (ev) => { if (ev.target.matches("input")) return; selected = tr.dataset.name; compare.delete(selected); renderRuns(); pollSeries(); });
   $("runRows").querySelectorAll("input[data-cmp]").forEach((cb) => cb.onchange = () => {
     if (cb.checked) { if (compare.size >= 2) { cb.checked = false; return; } compare.add(cb.dataset.cmp); } else compare.delete(cb.dataset.cmp);
-    renderExpert(); pollSeries();
+    renderRuns(); pollSeries();
   });
-  const r = runs.find((x) => x.name === selected);
+  const r = state.runs.find((x) => x.name === selected);
   $("selName").textContent = r ? r.name : "koşu seçilmedi";
   const lv = r?.last_validation || {};
   $("selTiles").innerHTML = r ? tile("Eğitim adımı", steps(r.timesteps), `hedef ${steps(r.total_timesteps)} · ${STATUS_TR[r.status]}`) +
-    tile("En iyi doğrulama J", nf(r.best_validation_score)) + tile("Son doğrulama: değer oranı", nf(lv.value_fraction)) +
-    tile("Son doğrulama: makespan", lv.makespan != null ? nf(lv.makespan, 0) + " s" : "–") : "";
+    tile("En iyi doğrulama skoru", nf(r.best_validation_score)) + tile("Son doğrulama: toplanan değer", pct(lv.value_fraction)) +
+    tile("Son doğrulama: görev süresi", lv.makespan != null ? nf(lv.makespan, 0) + " s" : "–") : "";
 }
+$("allRuns").onchange = renderRuns;
 function rebuildAllCharts() {
   for (const c of Object.values(expertCharts)) { c.chart.destroy(); c.chart = lineChart(c.card.querySelector("canvas"), (v) => nf(v, c.spec.digits)); }
-  for (const s of LEARN) { charts["learn_" + s.key]?.destroy(); charts["learn_" + s.key] = lineChart($(`learn_${s.key}`), s.fmt, "eğitim adımı (oynanan karar sayısı)"); }
-  charts.learnSimple?.destroy(); charts.learnSimple = lineChart($("learnSimple"), (v) => "%" + nf(v, 0), "eğitim sırasında oynanan karar sayısı");
-  updateExpertCharts(); updateLearning(); loadResults();
+  for (const s of LEARN) { charts["learn_" + s.key]?.destroy(); charts["learn_" + s.key] = lineChart($(`learn_${s.key}`), s.fmt, "eğitim adımı (verilen karar sayısı)"); }
+  updateExpertCharts(); updateLearning(); renderResults();
+}
+
+// ===================================================================== definitions
+function renderEnvTable() {
+  const rows = [
+    ["Drone sayısı", "3–5 (A ve B tipi; makale Tablo 3)", "4–7"],
+    ["Başlangıç hedef sayısı", "8–18", "16–28 (en fazla 40 hedef)"],
+    ["Pil süresi", "A: 1800 s, B: 2400 s", "makalenin %80'i"],
+    ["Değer kaybı", "eskime 0,001 1/s; uçuş riski 0,0002 1/m (makale)", "eskime 0,0005 1/s; uçuş riski 0,00005 1/m"],
+    ["Kritik hedef", "yok", "hedeflerin %25'i; değer 150–250 (rutin hedef 10–40); gözlem ortaya çıkıştan 200–700 s içinde başlamalı, yoksa değer 0"],
+    ["Sensör gereksinimi", "yok (her drone her hedefi gözleyebilir)", "hedeflerin %25'i yalnızca kızılötesi (K), %25'i yalnızca radar (R) ile; radar yalnızca B tipinde"],
+    ["Olaylar", "yeni hedef, düşme, sensör arızası, hava, hedef taşınması, değer düşüşü", "aynı türler; yeni hedef iki kat sık, 1200 s boyunca"],
+    ["Yeniden görevlendirme", "yok: atanan drone görevini değiştirmez", "yeni hedef ve düşme anında yoldaki dronelar yeniden karar verir"],
+    ["Skor ve ödül", "J = 0,5 × değer oranı − 0,5 × süre / 2400 s", "toplanan değer oranı"],
+    ["Gözlem (yapay zekâ girdisi)", "527 sayı; her hedef için 16 özellik", "her hedef için 24 özellik (son tarih, gerekli sensör, ...)"],
+  ];
+  $("envTable").innerHTML = rows.map(([k, a, b]) => `<tr><td>${k}</td><td>${a}</td><td>${b}</td></tr>`).join("");
 }
 
 // ===================================================================== boot
 if (typeof Chart === "undefined") {
   document.querySelector("main").insertAdjacentHTML("afterbegin", '<div class="card warn" style="margin-top:12px">Grafik kütüphanesi yüklenemedi (internet bağlantısını kontrol edin). Simülasyon yine çalışır.</div>');
-  window.Chart = function () { return { update() {}, destroy() {}, resize() {}, data: {} }; };
+  window.Chart = function () { return { update() {}, destroy() {}, resize() {}, data: { datasets: [] }, options: { scales: { x: { ticks: {} } } } }; };
 }
 Chart.defaults.font.family = "system-ui, -apple-system, 'Segoe UI', sans-serif";
 const urlq = new URLSearchParams(location.search);
+try { envId = localStorage.getItem("dash-env") || envId; } catch (e) {}
+if (urlq.get("env")) envId = urlq.get("env");
 if (urlq.get("scenario")) sim.preset = urlq.get("scenario");
 if (urlq.get("seed")) sim.seed = Number(urlq.get("seed")) || 0;
 if (urlq.get("t")) sim.t = Number(urlq.get("t")) || 0;
-let startExpert = false;
-try { startExpert = localStorage.getItem("dash-view") === "expert"; } catch (e) {}
-if (urlq.get("view")) startExpert = urlq.get("view") === "expert";
-setView(startExpert, true);
-if (startExpert && urlq.get("mode") === "single") { sim.mode = "single"; $("modeSingle").classList.add("on"); $("modeCompare").classList.remove("on"); }
-buildArena();
+if (urlq.get("mode") === "single") { sim.mode = "single"; $("modeSingle").classList.add("on"); $("modeCompare").classList.remove("on"); }
+renderEnvTable();
 buildLearning();
 buildExpertCharts();
 (async () => {
+  envs = await getJSON("/api/envs");
+  if (!envs.some((e) => e.id === envId)) envId = envs[0].id;
+  setEnv(envId, true);
   await pollState();
-  if (!isExpert()) setView(false, true);  // pick the AI source once runs are known
-  buildArena();
+  sim.sides[0].source = defaultAI();
   await loadPresets();
-  pollBaselines();
-  loadResults();
-  pollGroups(); pollSeries();
+  const p = presets.find((x) => x.id === sim.preset);
+  if (!p || p.env !== envId) sim.preset = presets.find((x) => x.env === envId)?.id;
+  buildArena();
+  onScenarioChange(false);
+  loadResults(); pollBaselines(); pollGroups(); pollSeries();
   setInterval(pollState, 5000);
   setInterval(() => { pollGroups(); pollSeries(); }, 30000);
 })();

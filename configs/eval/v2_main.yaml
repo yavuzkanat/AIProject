@@ -1,0 +1,13 @@
+# Extended environment v2: held-out test set (500 scenarios; seeds 2,000,000+ were never used
+# for training or checkpoint selection). The environment is read from the training config.
+name: v2_main
+output: results/eval/v2_main.csv
+model_file: best_model.zip
+env_from: configs/train/ppo_entity_hard.yaml
+ppo_runs:
+  ppo_entity_hard: results/runs/ppo_entity_hard_seed*
+lookahead_runs:
+  ppo_entity_hard_lookahead: {pattern: results/runs/ppo_entity_hard_seed*, top_k: 2, samples: 0}
+baselines: [random, greedy_value_rate, greedy_nearest, rh_rk]
+conditions:
+  - {name: test_id, scenarios: {seed_base: 2000000, count: 500}}

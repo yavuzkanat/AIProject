@@ -91,6 +91,8 @@ def run_episode(
                 "initial_value": tg.spec.value,
                 "observation_time": tg.spec.observation_time,
                 "slot": tg.slot,
+                "deadline_time": tg.deadline_time,
+                "required_sensor": tg.spec.required_sensor,
             }
             for tg in sim.targets
         }

@@ -145,6 +145,10 @@ def scenario_from_dict(data: dict, variant: str | None = None) -> Scenario:
             observation_time=t.observation_time,
             position=_vec3(t.position),
             initial=t.initial,
+            decay_rate=t.decay_rate,
+            required_sensor=t.required_sensor,
+            deadline=t.deadline,
+            late_factor=t.late_factor,
         )
         for t in spec.targets
         if _included(t.scenarios, variant)

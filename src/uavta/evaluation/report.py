@@ -32,7 +32,9 @@ def method_summary(df: pd.DataFrame, condition: str, metrics: Sequence[str]) -> 
         row["n_seeds"] = len(seeds) if seeds else 0
         row["n_scenarios"] = grp["scenario_ref"].nunique()
         for metric in metrics:
-            scen = grp.groupby("scenario_ref")[metric].mean()
+            # Undefined values (e.g. critical-target rate in a scenario without critical
+            # targets) are excluded, not counted as zero.
+            scen = grp.groupby("scenario_ref")[metric].mean().dropna()
             if seeds:
                 seed_means = grp.groupby("train_seed")[metric].mean()
                 spread = float(seed_means.std(ddof=1)) if len(seed_means) > 1 else 0.0

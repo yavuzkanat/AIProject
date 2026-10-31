@@ -41,11 +41,13 @@ class EnvConfig(BaseModel):
     energy_reserve: float = Field(0.0, ge=0, lt=1)
     idle_consumes_energy: bool = True
     allow_voluntary_wait: bool = False
+    retask_on_event: bool = False  # extended environment: re-decisions at new-target/crash events
     min_operational_uavs: int = Field(1, ge=0)
     invalid_action_mode: Literal["strict", "penalize"] = "strict"
     max_decisions: int = Field(400, gt=0)
     value_max: float = Field(100.0, gt=0)
     speed_ref: float = Field(30.0, gt=0)
+    extended_features: bool = False  # extra target features for the extended environment
     reward: RewardConfig = Field(default_factory=RewardConfig)
     scenario: ScenarioSourceConfig = Field(default_factory=ScenarioSourceConfig)
 
@@ -56,6 +58,7 @@ class EnvConfig(BaseModel):
             idle_consumes_energy=self.idle_consumes_energy,
             allow_voluntary_wait=self.allow_voluntary_wait,
             min_operational_uavs=self.min_operational_uavs,
+            retask_on_event=self.retask_on_event,
         )
 
 
@@ -101,6 +104,7 @@ class MultiUAVDynamicEnv(gym.Env):
             airspace=airspace,
             value_max=config.value_max,
             speed_ref=config.speed_ref,
+            extended=config.extended_features,
         )
         self.observation_space = spaces.Box(
             low=-1.0, high=1.0, shape=(self.obs_spec.size,), dtype=np.float32

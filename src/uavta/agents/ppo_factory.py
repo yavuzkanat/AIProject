@@ -70,11 +70,13 @@ def make_model(
         from uavta.agents.entity_policy import EntityMaskablePolicy
 
         env_cfg = vec_env.get_attr("config")[0]
+        obs_spec = vec_env.get_attr("obs_spec")[0]
         policy = EntityMaskablePolicy
         policy_kwargs = {
             "max_uavs": env_cfg.max_uavs,
             "max_targets": env_cfg.max_targets,
             "entity_hidden": config.entity_hidden,
+            "target_features": obs_spec.target_features,
         }
         if config.policy == "attention":
             policy_kwargs["attention_layers"] = config.attention_layers

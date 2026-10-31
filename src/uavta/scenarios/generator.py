@@ -97,6 +97,16 @@ class GeneratorConfig(BaseModel):
     move_dz: float = Field(30.0, ge=0)
     value_factor: Range = (0.4, 0.7)
     weather_factor: Range = (0.5, 1.0)
+    # Extended environment (docs/assumptions.md §12). The defaults switch everything off and
+    # draw no extra random numbers, so every v1 seed yields exactly the same scenario.
+    urgent_fraction: float = Field(0.0, ge=0, le=1)
+    urgent_decay_rate: float = Field(0.006, gt=0)
+    urgent_value_range: Range | None = None
+    sensor_requirements: dict[str, float] = Field(default_factory=lambda: {"none": 1.0})
+    critical_fraction: float = Field(0.0, ge=0, le=1)
+    critical_value_range: Range = (150.0, 250.0)
+    critical_deadline_range: Range = (300.0, 900.0)
+    critical_late_factor: float = Field(0.0, ge=0, le=1)
 
     @model_validator(mode="after")
     def _check(self) -> GeneratorConfig:
@@ -113,7 +123,18 @@ class GeneratorConfig(BaseModel):
         lo, hi = self.weather_factor
         if not 0.0 < lo <= hi <= 1.0:
             raise ValueError("weather_factor must lie in (0, 1]")
+        unknown = set(self.sensor_requirements) - {"none", *SENSORS}
+        if unknown:
+            raise ValueError(f"sensor_requirements has unknown keys {sorted(unknown)}")
+        if any(v < 0 for v in self.sensor_requirements.values()) or (
+            abs(sum(self.sensor_requirements.values()) - 1.0) > 1e-9
+        ):
+            raise ValueError("sensor_requirements must be non-negative and sum to 1")
         return self
+
+    @property
+    def has_requirements(self) -> bool:
+        return any(v > 0 for k, v in self.sensor_requirements.items() if k != "none")
 
 
 class ScenarioGenerator:
@@ -150,8 +171,14 @@ class ScenarioGenerator:
                     start_position=(pos[0], pos[1], pos[2]),
                 )
             )
-        targets = [self._target(layout, f"T{k + 1}", box, initial=True) for k in range(n_targets)]
-        events = self._events(ev_rng, box, max_new=cfg.max_total_targets - n_targets)
+        carried = {s for u in uavs for s, on in zip(SENSORS, u.sensors, strict=True) if on}
+        targets = [
+            self._target(layout, f"T{k + 1}", box, initial=True, carried=carried)
+            for k in range(n_targets)
+        ]
+        events = self._events(
+            ev_rng, box, max_new=cfg.max_total_targets - n_targets, carried=carried
+        )
         return Scenario(
             name=f"{self.name}_{seed}",
             airspace=cfg.airspace,
@@ -186,6 +213,10 @@ class ScenarioGenerator:
                     observation_time=e.target.observation_time,
                     position=e.target.position,
                     initial=False,
+                    decay_rate=e.target.decay_rate,
+                    required_sensor=e.target.required_sensor,
+                    deadline=e.target.deadline,
+                    late_factor=e.target.late_factor,
                 )
                 e = NewTarget(time=e.time, target=spec)
             out.append(e)
@@ -205,19 +236,54 @@ class ScenarioGenerator:
         return float(lo + (hi - lo) * rng.beta(0.7, 3.0))
 
     def _target(
-        self, rng: np.random.Generator, tid: str, box: np.ndarray, initial: bool
+        self,
+        rng: np.random.Generator,
+        tid: str,
+        box: np.ndarray,
+        initial: bool,
+        carried: set[str] | None = None,
     ) -> TargetSpec:
         cfg = self.config
         x = float(rng.uniform(0.0, box[0]))
         y = float(rng.uniform(0.0, box[1]))
         z = float(rng.uniform(*cfg.target_z))
+        value = self._value(rng)
+        observation_time = float(rng.uniform(*cfg.observation_time_range))
+        # Extended attributes are drawn after the v1 draws and only when enabled.
+        decay_rate: float | None = None
+        if cfg.urgent_fraction > 0 and rng.random() < cfg.urgent_fraction:
+            decay_rate = cfg.urgent_decay_rate
+            if cfg.urgent_value_range is not None:
+                value = float(rng.uniform(*cfg.urgent_value_range))
+        required: str | None = None
+        if cfg.has_requirements:
+            required = self._requirement(rng, carried)
+        deadline: float | None = None
+        if cfg.critical_fraction > 0 and rng.random() < cfg.critical_fraction:
+            value = float(rng.uniform(*cfg.critical_value_range))
+            deadline = float(rng.uniform(*cfg.critical_deadline_range))
         return TargetSpec(
             id=tid,
-            value=self._value(rng),
-            observation_time=float(rng.uniform(*cfg.observation_time_range)),
+            value=value,
+            observation_time=observation_time,
             position=(x, y, min(z, float(box[2]))),
             initial=initial,
+            decay_rate=decay_rate,
+            required_sensor=required,
+            deadline=deadline,
+            late_factor=cfg.critical_late_factor if deadline is not None else 0.0,
         )
+
+    def _requirement(self, rng: np.random.Generator, carried: set[str] | None) -> str | None:
+        """Draw a required sensor; sensors no UAV of the scenario carries are excluded."""
+        options = [
+            (k, v)
+            for k, v in sorted(self.config.sensor_requirements.items())
+            if v > 0 and (k == "none" or carried is None or k in carried)
+        ]
+        probs = np.array([v for _, v in options], dtype=np.float64)
+        k = options[int(rng.choice(len(options), p=probs / probs.sum()))][0]
+        return None if k == "none" else k
 
     def _times(self, rng: np.random.Generator, rate: float) -> np.ndarray:
         window = self.config.event_window
@@ -225,7 +291,13 @@ class ScenarioGenerator:
         # Strictly positive times: events at t = 0 would precede the first decision.
         return np.sort(rng.uniform(1e-3, window, size=n))
 
-    def _events(self, rng: np.random.Generator, box: np.ndarray, max_new: int) -> list[Event]:
+    def _events(
+        self,
+        rng: np.random.Generator,
+        box: np.ndarray,
+        max_new: int,
+        carried: set[str] | None = None,
+    ) -> list[Event]:
         cfg = self.config
         rates = cfg.event_rates
         events: list[Event] = []
@@ -234,7 +306,10 @@ class ScenarioGenerator:
         cap = max_new if cfg.max_new_targets is None else min(max_new, cfg.max_new_targets)
         for k, t in enumerate(new_times[: max(cap, 0)]):
             events.append(
-                NewTarget(time=float(t), target=self._target(rng, f"N{k + 1}", box, initial=False))
+                NewTarget(
+                    time=float(t),
+                    target=self._target(rng, f"N{k + 1}", box, initial=False, carried=carried),
+                )
             )
         for t in self._times(rng, rates.uav_crash):
             events.append(UAVCrash(time=float(t), uav_selector=float(rng.random())))

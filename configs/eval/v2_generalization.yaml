@@ -1,0 +1,20 @@
+# Extended environment v2: conditions outside the training distribution (100 scenarios each,
+# seeds 3,000,000+). Training: 4-7 UAVs, 16-28 targets, 25 % critical, deadlines 200-700 s.
+name: v2_generalization
+output: results/eval/v2_generalization.csv
+model_file: best_model.zip
+env_from: configs/train/ppo_entity_hard.yaml
+ppo_runs:
+  ppo_entity_hard: results/runs/ppo_entity_hard_seed*
+baselines: [greedy_value_rate, greedy_nearest, rh_rk]
+conditions:
+  - {name: rate_x0, event_rate_scale: 0.0, scenarios: {seed_base: 3000000, count: 100}}
+  - {name: rate_x2, event_rate_scale: 2.0, scenarios: {seed_base: 3000000, count: 100}}
+  - {name: critical_50, generator: {critical_fraction: 0.5}, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: critical_10, generator: {critical_fraction: 0.1}, scenarios: {seed_base: 3100000, count: 100}}
+  - {name: deadline_tight, generator: {critical_deadline_range: [150.0, 400.0]}, scenarios: {seed_base: 3200000, count: 100}}
+  - {name: radar_heavy, generator: {sensor_requirements: {none: 0.3, IR: 0.2, RD: 0.5}}, scenarios: {seed_base: 3300000, count: 100}}
+  - {name: no_requirements, generator: {sensor_requirements: {none: 1.0, IR: 0.0, RD: 0.0}}, scenarios: {seed_base: 3300000, count: 100}}
+  - {name: size_small, generator: {n_uavs: [3, 3], n_targets: [10, 14]}, scenarios: {seed_base: 3400000, count: 100}}
+  - {name: size_large, generator: {n_uavs: [8, 8], n_targets: [28, 30]}, scenarios: {seed_base: 3400000, count: 100}}
+  - {name: endurance_x0.6, generator: {endurance_scale: 0.6}, scenarios: {seed_base: 3500000, count: 100}}

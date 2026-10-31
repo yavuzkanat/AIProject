@@ -29,7 +29,7 @@ import numpy as np
 
 from uavta.dynamics.energy import is_energy_feasible, residual_energy, time_to_depletion
 from uavta.dynamics.kinematics import advance_toward, clip_to_airspace, distance
-from uavta.dynamics.sensing import sensing_capability
+from uavta.dynamics.sensing import sensing_capability, target_sensing_capability
 from uavta.dynamics.survival import segment_survival
 from uavta.dynamics.value import decay_factor, expected_collected_value
 from uavta.entities.sensors import SENSORS, sensor_index
@@ -72,6 +72,9 @@ class SimulatorConfig:
         allow_voluntary_wait: Allow WAIT while valid targets exist (J3b ablation only).
         min_operational_uavs: Selector-based (stochastic) crashes are skipped when they
             would leave fewer operational UAVs than this. Named crashes always apply.
+        retask_on_event: Extended environment: at the instant of a new-target or crash event,
+            every UAV in transit gets a re-decision: continue to its target or switch to another
+            valid one (observing UAVs are never interrupted). Off in v1 (J2a).
     """
 
     horizon: float = 2400.0
@@ -79,6 +82,7 @@ class SimulatorConfig:
     idle_consumes_energy: bool = True
     allow_voluntary_wait: bool = False
     min_operational_uavs: int = 1
+    retask_on_event: bool = False
 
     def __post_init__(self) -> None:
         if self.horizon <= 0:
@@ -129,6 +133,8 @@ class SimulatorTotals:
     waits: int = 0
     aborted_tasks: int = 0
     interrupted_observations: int = 0
+    retasks: int = 0  # re-decisions that switched target
+    retasks_kept: int = 0  # re-decisions that continued to the same target
     last_completion_time: float = 0.0
     events_applied: int = 0
     events_without_effect: int = 0
@@ -171,6 +177,8 @@ class Simulator:
         self._events: list[Event] = list(sc.events)
         self._next_event = 0
         self.waiting = np.zeros(len(self.uavs), dtype=bool)
+        # UAVs in transit owed a re-decision at the current instant (retask_on_event).
+        self.retask_pending: set[int] = set()
         self.decision_uav: int | None = None
         self.terminated = False
         self.truncated = False
@@ -205,6 +213,29 @@ class Simulator:
         """Current sensing capability ηᵢ(t) (Eq. 5)."""
         return sensing_capability(self.uavs[i].sensor_ok, self.weather)
 
+    def eta_for(self, i: int, slot: int) -> float:
+        """Sensing capability of UAV i for target ``slot``.
+
+        Equals :meth:`eta` unless the target requires one specific sensor (extended
+        environment), in which case only that sensor counts.
+        """
+        req = self.targets[slot].spec.required_sensor
+        if req is None:
+            return self.eta(i)
+        return target_sensing_capability(
+            self.uavs[i].sensor_ok, self.weather, sensor_index(req)
+        )
+
+    def can_sense(self, i: int, slot: int) -> bool:
+        """False iff the target requires a sensor that UAV i does not have working."""
+        req = self.targets[slot].spec.required_sensor
+        return req is None or bool(self.uavs[i].sensor_ok[sensor_index(req)])
+
+    def decay_rate(self, slot: int) -> float:
+        """Timeliness decay constant of target ``slot``: its own rate or the scenario's λ_obse."""
+        rate = self.targets[slot].spec.decay_rate
+        return self.scenario.lambda_obse if rate is None else rate
+
     def clone_without_future(self) -> Simulator:
         """Independent copy of the current state with all not-yet-occurred events removed.
 
@@ -229,24 +260,46 @@ class Simulator:
         """Boolean mask of length ``max_targets``: slots UAV i may be assigned now.
 
         A slot is valid iff it holds an appeared, unfinished, unlocked target, UAV i is
-        operational and unassigned, and the task is energy-feasible (Eq. 11 for one task).
+        operational and unassigned, the task is energy-feasible (Eq. 11 for one task) and, for
+        a target that requires a specific sensor, UAV i has that sensor working. During a
+        re-decision (retask_on_event) the UAV's own committed target is valid as well
+        ("continue"), and the other targets are evaluated from its current position.
         """
         assert self.max_targets is not None
         mask = np.zeros(self.max_targets, dtype=bool)
         u = self.uavs[i]
-        if not u.is_operational or u.has_task:
+        if not u.is_operational or (u.has_task and not self.is_retask_decision(i)):
             return mask
         rate = u.spec.consumption_rate
         for tg in self.targets:
-            if tg.completed or tg.locked_by is not None:
+            if tg.locked_by == i:
+                mask[tg.slot] = True  # continuing the committed task is always possible
                 continue
-            _, duration = self.task_duration(i, tg.slot)
+            if tg.completed or tg.locked_by is not None or not self.can_sense(i, tg.slot):
+                continue
+            d, duration = self.task_duration(i, tg.slot)
+            if tg.timeliness(self.t + d / u.spec.speed) == 0.0:
+                continue  # deadline would be missed and a late observation is worthless
             mask[tg.slot] = is_energy_feasible(u.energy, rate, duration, self.config.energy_reserve)
         return mask
 
+    def is_retask_decision(self, i: int) -> bool:
+        """True if UAV i is in transit and owed a re-decision at this instant."""
+        return i in self.retask_pending and self.uavs[i].status == UAVStatus.TRANSIT
+
     def needs_decision(self, i: int) -> bool:
         u = self.uavs[i]
-        if not u.is_operational or u.has_task or self.waiting[i]:
+        if not u.is_operational or self.waiting[i]:
+            return False
+        if u.has_task:
+            if not self.is_retask_decision(i):
+                return False
+            valid = self.valid_targets(i)
+            assert u.task_slot is not None
+            valid[u.task_slot] = False
+            if valid.any():
+                return True
+            self.retask_pending.discard(i)  # nothing to switch to: no decision needed
             return False
         return bool(self.valid_targets(i).any())
 
@@ -277,8 +330,9 @@ class Simulator:
         d = distance(u.position, tg.position)
         arrival = self.t + d / u.spec.speed
         survival = u.survival * segment_survival(d, u.spec.vulnerability, self.scenario.lambda_risk)
-        decay = decay_factor(arrival, tg.reference_time, self.scenario.lambda_obse)
-        return expected_collected_value(tg.value, self.eta(i), survival, decay)
+        decay = decay_factor(arrival, tg.reference_time, self.decay_rate(slot))
+        value = tg.value * tg.timeliness(arrival)
+        return expected_collected_value(value, self.eta_for(i, slot), survival, decay)
 
     def mission_active(self) -> bool:
         """True while some operational UAV holds a task (time cost accrues, phase1 §E)."""
@@ -297,7 +351,22 @@ class Simulator:
             raise SimulationError("assign() called with no pending decision")
         i = self.decision_uav
         valid = self.valid_targets(i)
-        if slot is None:
+        u = self.uavs[i]
+        if u.has_task:  # re-decision of a UAV in transit
+            assert self.max_targets is not None and u.task_slot is not None
+            if slot is None or not 0 <= slot < self.max_targets or not valid[slot]:
+                raise InvalidActionError(f"re-decision {slot} is not valid for UAV {i}")
+            self.retask_pending.discard(i)
+            if slot == u.task_slot:
+                self.totals.retasks_kept += 1
+            else:
+                self.targets[u.task_slot].locked_by = None
+                u.task_slot = slot
+                self.targets[slot].locked_by = i
+                self._set_status(i, UAVStatus.TRANSIT, slot)  # new straight segment from here
+                self.assignment_log.append({"time": self.t, "uav": i, "slot": slot, "retask": True})
+                self.totals.retasks += 1
+        elif slot is None:
             if valid.any() and not self.config.allow_voluntary_wait:
                 raise InvalidActionError(f"WAIT chosen for UAV {i} although valid targets exist")
             self.waiting[i] = True
@@ -353,6 +422,7 @@ class Simulator:
             raise SimulationError(f"time would move backwards: {self.t} -> {t_next}")
         if dt == 0:
             return
+        self.retask_pending.clear()  # re-decisions are only owed at the event instant
         if self.mission_active():
             self.step_acc.active_time += dt
             self.totals.active_time += dt
@@ -418,8 +488,10 @@ class Simulator:
         u = self.uavs[i]
         assert u.task_slot is not None and u.arrival_time is not None
         tg = self.targets[u.task_slot]
-        decay = decay_factor(u.arrival_time, tg.reference_time, self.scenario.lambda_obse)
-        value = expected_collected_value(tg.value, self.eta(i), u.survival, decay)
+        decay = decay_factor(u.arrival_time, tg.reference_time, self.decay_rate(u.task_slot))
+        value = expected_collected_value(
+            tg.value * tg.timeliness(u.arrival_time), self.eta_for(i, u.task_slot), u.survival, decay
+        )
         tg.completed = True
         tg.completion_time = self.t
         tg.collected_value = value
@@ -477,6 +549,14 @@ class Simulator:
             record["weights"] = list(event.weights)
         else:  # pragma: no cover
             raise TypeError(f"unknown event {event!r}")
+        if (
+            self.config.retask_on_event
+            and record["effect"] == "applied"
+            and isinstance(event, (NewTarget, UAVCrash))
+        ):
+            self.retask_pending.update(
+                k for k, v in enumerate(self.uavs) if v.is_operational and v.status == UAVStatus.TRANSIT
+            )
         if record["effect"] == "applied":
             self.totals.events_applied += 1
             self.last_event_type = event.event_type
@@ -548,6 +628,20 @@ class Simulator:
             record["effect"] = "no_effect"
             return
         u.sensor_ok[m] = False
+        if u.task_slot is not None and not self.can_sense(i, u.task_slot):
+            # The committed target needs exactly the sensor that failed (extended environment):
+            # the task can no longer produce any value, so it is aborted and the target freed.
+            tg = self.targets[u.task_slot]
+            tg.locked_by = None
+            if u.status == UAVStatus.OBSERVING:
+                self.totals.interrupted_observations += 1
+            self.totals.aborted_tasks += 1
+            u.task_slot = None
+            u.arrival_time = None
+            u.observation_end_time = None
+            self._set_status(i, UAVStatus.IDLE, None)
+            record["aborted_uav"] = u.spec.id
+            record["released_target"] = tg.spec.id
 
     def _event_move(self, event: TargetMove, record: dict[str, Any]) -> None:
         slot = self._resolve_target(event.target, event.target_selector)
@@ -583,7 +677,7 @@ class Simulator:
         duration = d / u.spec.speed + tg.spec.observation_time
         if is_energy_feasible(
             u.energy, u.spec.consumption_rate, duration, self.config.energy_reserve
-        ):
+        ) and tg.timeliness(self.t + d / u.spec.speed) > 0.0:
             record["redirected_uav"] = u.spec.id
             self._set_status(i, UAVStatus.TRANSIT, slot)  # new straight segment from here
         else:
@@ -718,6 +812,13 @@ class Simulator:
         energies = np.array([u.energy for u in self.uavs])
         used = 1.0 - energies
         survival = np.array([u.survival for u in self.uavs])
+        # Critical targets (extended environment): observation started before the deadline.
+        critical = [tg for tg in self.targets if tg.deadline_time is not None]
+        on_time = sum(
+            tg.completed and tg.timeliness(tg.completion_time - tg.spec.observation_time) == 1.0
+            for tg in critical
+            if tg.completion_time is not None
+        )
         return {
             "t_end": self.t,
             "termination_reason": self.termination_reason,
@@ -744,23 +845,29 @@ class Simulator:
             "n_waits": self.totals.waits,
             "aborted_tasks": self.totals.aborted_tasks,
             "interrupted_observations": self.totals.interrupted_observations,
+            "n_retasks": self.totals.retasks,
             "events_applied": self.totals.events_applied,
             "events_without_effect": self.totals.events_without_effect,
             "unfinished_feasible_at_end": self._unfinished_feasible(),
+            "n_critical": len(critical),
+            "critical_on_time": on_time,
+            "critical_on_time_rate": on_time / len(critical) if critical else None,
         }
 
     def _unfinished_feasible(self) -> int:
-        """Unfinished targets still energy-feasible for some operational idle UAV."""
+        """Unfinished targets still energy-feasible (and observable) for some operational UAV."""
         count = 0
         for tg in self.targets:
             if tg.completed:
                 continue
             for i, u in enumerate(self.uavs):
-                if not u.is_operational:
+                if not u.is_operational or not self.can_sense(i, tg.slot):
                     continue
                 d = distance(self.free_position(i), tg.position)
-                dur = self.time_until_free(i) + d / u.spec.speed + tg.spec.observation_time
-                if is_energy_feasible(u.energy, u.spec.consumption_rate, dur):
+                busy = self.time_until_free(i)
+                dur = busy + d / u.spec.speed + tg.spec.observation_time
+                late = tg.timeliness(self.t + busy + d / u.spec.speed) == 0.0
+                if not late and is_energy_feasible(u.energy, u.spec.consumption_rate, dur):
                     count += 1
                     break
         return count

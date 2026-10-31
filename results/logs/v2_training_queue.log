@@ -1,0 +1,12 @@
+11:37:59 start ppo_entity_hard_seed0
+11:37:59 start ppo_entity_hard_seed1
+11:37:59 start ppo_entity_hard_seed2
+13:25:29 done ppo_entity_hard_seed1
+13:25:32 start ppo_entity_hard_seed3
+13:26:33 done ppo_entity_hard_seed0
+13:26:37 start ppo_entity_hard_seed4
+13:26:56 done ppo_entity_hard_seed2
+./scripts/run_v2_training.sh: line 10: 51645 Killed: 9               $PY scripts/train.py --config configs/train/ppo_entity_hard.yaml --seed "$s" >> "results/logs/ppo_entity_hard_seed$s.log" 2>&1
+22:56:09 FAILED ppo_entity_hard_seed4 (see results/logs)
+./scripts/run_v2_training.sh: line 10: 51544 Killed: 9               $PY scripts/train.py --config configs/train/ppo_entity_hard.yaml --seed "$s" >> "results/logs/ppo_entity_hard_seed$s.log" 2>&1
+22:56:15 FAILED ppo_entity_hard_seed3 (see results/logs)

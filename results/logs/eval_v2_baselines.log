@@ -1,0 +1,13 @@
+2026-10-27 11:56:57,333 INFO condition test_id done
+wrote 2000 rows to results/eval/v2_main_baselines.csv
+2026-10-27 11:58:10,144 INFO condition rate_x0 done
+2026-10-27 12:10:19,734 INFO condition rate_x2 done
+2026-10-27 12:14:04,175 INFO condition critical_50 done
+2026-10-27 12:17:12,766 INFO condition critical_10 done
+2026-10-27 12:20:32,787 INFO condition deadline_tight done
+2026-10-27 12:23:24,440 INFO condition radar_heavy done
+2026-10-27 12:27:00,704 INFO condition no_requirements done
+2026-10-27 12:28:45,410 INFO condition size_small done
+2026-10-27 12:34:05,582 INFO condition size_large done
+2026-10-27 12:37:28,183 INFO condition endurance_x0.6 done
+wrote 3000 rows to results/eval/v2_generalization_baselines.csv
